@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Class Record Management</title>
+
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+
+<div id="root"></div>
+
+<script type="text/babel">
+
+function Sidebar({ page, setPage }) {
+  const pages = ['Dashboard', 'Students', 'Attendance', 'Grades', 'Reports', 'Settings'];
+  return (
+    <aside className="sidebar">
+      <h2>CLASS REC</h2>
+      {pages.map(p => (
+        <button
+          key={p}
+          className={`nav-button ${page === p ? 'active' : ''}`}
+          onClick={() => setPage(p)}
+        >
+          {p}
+        </button>
+      ))}
+    </aside>
+  );
+}
+
+function Dashboard({ loggedInUser, setPage }) {
+  return (
+    <>
+      <h1>Welcome, {loggedInUser}!</h1>
+      <div className="dashboard-cards">
+        <div className="card">
+          <h3>Today's Schedule</h3>
+          <p>No classes today (mock)</p>
+        </div>
+        <div className="card">
+          <h3>Pending Tasks</h3>
+          <p>No pending tasks</p>
+        </div>
+      </div>
+      <button className="primary-btn" onClick={() => setPage('Students')}>Go to Students</button>
+    </>
+  );
+}
+
+function Students() {
+  const students = [
+    { id: 1001, name: 'John Doe', className: 'Grade 10 A', averageGrade: 89.5 },
+    { id: 1002, name: 'Jane Smith', className: 'Grade 10 B', averageGrade: 92.3 },
+    { id: 1003, name: 'Alice Johnson', className: 'Grade 11 A', averageGrade: 85.6 },
+  ];
+
+  return (
+    <>
+      <h1>Students</h1>
+      <div className="students-list">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th><th>Name</th><th>Class</th><th>Average Grade (%)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {students.map(s => (
+              <tr key={s.id}>
+                <td>{s.id}</td>
+                <td>{s.name}</td>
+                <td>{s.className}</td>
+                <td>{s.averageGrade}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <button className="primary-btn">+ Add New Student</button>
+      </div>
+    </>
+  );
+}
+
+function Login({ onLogin }) {
+  const [username, setUsername] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [error, setError] = React.useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+ 
+    if (username.trim() === '') {
+      setError('Username is required');
+      return;
+    }
+  
+    onLogin(username);
+  };
+
+  return (
+    <div className="login-container">
+      <h2>Login to Class Record</h2>
+      <form onSubmit={handleSubmit} className="login-form">
+        <label>
+          Username:
+          <input
+            type="text"
+            value={username}
+            onChange={e => { setUsername(e.target.value); setError(''); }}
+            autoFocus
+          />
+        </label>
+        <label>
+          Password:
+          <input
+            type="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+          />
+        </label>
+        {error && <p className="error">{error}</p>}
+        <button type="submit" className="primary-btn">Login</button>
+      </form>
+    </div>
+  );
+}
+
+function App() {
+  const [page, setPage] = React.useState('Dashboard');
+  const [loggedInUser, setLoggedInUser] = React.useState(null);
+
+  if (!loggedInUser) {
+    return <Login onLogin={setLoggedInUser} />;
+  }
+
+  return (
+    <>
+      <Sidebar page={page} setPage={setPage} />
+      <main className="main-content">
+        {page === 'Dashboard' && <Dashboard loggedInUser={loggedInUser} setPage={setPage} />}
+        {page === 'Students' && <Students />}
+        {page !== 'Dashboard' && page !== 'Students' && (
+          <h1>{page} page is under construction.</h1>
+        )}
+      </main>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
+
+</script>
+
+</body>
+</html>
