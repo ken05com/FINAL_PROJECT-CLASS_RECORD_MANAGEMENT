@@ -8,8 +8,8 @@
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
 
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <link rel="stylesheet" href="style.css">
-
+    <link rel="stylesheet" href="style.css">
+  
 </head>
 <body>
 
@@ -55,11 +55,50 @@ function Dashboard({ loggedInUser, setPage }) {
 }
 
 function Students() {
-  const students = [
-    { id: 1001, name: 'John Doe', className: 'Grade 10 A', averageGrade: 89.5 },
-    { id: 1002, name: 'Jane Smith', className: 'Grade 10 B', averageGrade: 92.3 },
-    { id: 1003, name: 'Alice Johnson', className: 'Grade 11 A', averageGrade: 85.6 },
-  ];
+  const [students, setStudents] = React.useState([  
+  ]);
+
+  const [showForm, setShowForm] = React.useState(false);
+  const [newStudent, setNewStudent] = React.useState({
+    id: '',
+    name: '',
+    className: '',
+    averageGrade: '',
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setNewStudent(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleAddStudent = (e) => {
+    e.preventDefault();
+
+    if (
+      !newStudent.id.trim() ||
+      !newStudent.name.trim() ||
+      !newStudent.className.trim() ||
+      newStudent.averageGrade === ''
+    ) {
+      alert('Please fill out all fields.');
+      return;
+    }
+
+    if (students.find(s => s.id === newStudent.id)) {
+      alert('Student ID must be unique.');
+      return;
+    }
+
+    setStudents(prev => [...prev, {
+      id: newStudent.id,
+      name: newStudent.name,
+      className: newStudent.className,
+      averageGrade: parseFloat(newStudent.averageGrade),
+    }]);
+
+    setNewStudent({ id: '', name: '', className: '', averageGrade: '' });
+    setShowForm(false);
+  };
 
   return (
     <>
@@ -82,11 +121,51 @@ function Students() {
             ))}
           </tbody>
         </table>
-        <button className="primary-btn">+ Add New Student</button>
+
+        {showForm ? (
+          <form onSubmit={handleAddStudent} className="add-student-form">
+            <input
+              type="text"
+              name="id"
+              placeholder="ID"
+              value={newStudent.id}
+              onChange={handleChange}
+            />
+            <input
+              type="text"
+              name="name"
+              placeholder="Name"
+              value={newStudent.name}
+              onChange={handleChange}
+            />
+            <input
+              type="text"
+              name="className"
+              placeholder="Class"
+              value={newStudent.className}
+              onChange={handleChange}
+            />
+            <input
+              type="number"
+              step="0.1"
+              min="0"
+              max="100"
+              name="averageGrade"
+              placeholder="Average Grade (%)"
+              value={newStudent.averageGrade}
+              onChange={handleChange}
+            />
+            <button type="submit" className="primary-btn">Add Student</button>
+            <button type="button" onClick={() => setShowForm(false)} style={{ marginLeft: '10px' }}>Cancel</button>
+          </form>
+        ) : (
+          <button className="primary-btn" onClick={() => setShowForm(true)}>+ Add New Student</button>
+        )}
       </div>
     </>
   );
 }
+
 
 function Login({ onLogin }) {
   const [username, setUsername] = React.useState('');
@@ -95,20 +174,19 @@ function Login({ onLogin }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
- 
+
     if (username.trim() === '') {
       setError('Username is required');
       return;
     }
-  
     onLogin(username);
   };
 
   return (
     <div className="login-container">
-      <h2>Login to Class Record</h2>
-      <form onSubmit={handleSubmit} className="login-form">
-        <label>
+        <form onSubmit={handleSubmit} className="login-form">
+            <label>
+            <h2>Login to Class Record Management</h2>
           Username:
           <input
             type="text"
@@ -154,8 +232,9 @@ function App() {
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 
 </script>
 
