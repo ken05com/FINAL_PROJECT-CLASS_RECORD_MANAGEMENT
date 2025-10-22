@@ -1,242 +1,189 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Class Record Management</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Class Record</title>
+  <style>
+    /* Reset default margins and fonts */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
+    }
 
-  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    body {
+    background: #131314;
+    color: white;
+    display: flex;
+    min-height: 100vh;
+    }
 
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <link rel="stylesheet" href="style.css">
-  
+    /* Sidebar styling */
+    .sidebar {
+      width: 250px;
+      background: #2c3e50;
+      color: #fff;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      padding: 20px;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar h2 {
+      margin-bottom: 20px;
+      text-align: center;
+      font-size: 22px;
+      letter-spacing: 1px;
+    }
+
+    .sidebar ul {
+      list-style: none;
+    }
+
+    .sidebar ul li {
+      padding: 12px 10px;
+      border-radius: 8px;
+      transition: 0.3s;
+    }
+
+    .sidebar ul li:hover {
+      background: #34495e;
+      cursor: pointer;
+    }
+
+    /* Main content */
+    .main-content {
+      margin-left: 250px;
+      padding: 160px 80px;
+      flex: 1;
+    }
+
+    /* Header styling */
+    header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 60px;
+        /* background: #34495e; */
+        color: #fff;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 20px;
+        font-size: 20px;
+        font-weight: bold;
+        letter-spacing: 1px;
+        z-index: 1000;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    .header-buttons {
+        display: flex;
+        gap: 10px;
+    }
+
+        /* Base button style */
+    .btn {
+        border: none;
+        border-radius: 8px;
+        padding: 8px 14px;
+        font-size: 14px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: 0.3s ease;
+    }
+
+        /* Sign In Button */
+    .btn.sign-in {
+        background-color: transparent;
+        color: white;
+        border: 1px solid white;
+    }
+    .btn.sign-in:hover {
+        background-color: white;
+        color: #34495e;
+    }
+
+    /* Sign Up Button */
+    .btn.sign-up {
+        background-color: #00b894;
+        color: white;
+    }
+    .btn.sign-up:hover {
+        background-color: #019870;
+    }
+
+
+    /* Open button (mobile only) */
+    .open-btn {
+      display: none;
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      background: #34495e;
+      color: white;
+      border: none;
+      font-size: 24px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      z-index: 1100;
+    }
+
+    /* Responsive rules */
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+
+      .sidebar.active {
+        transform: translateX(0);
+      }
+
+      .main-content {
+        margin-left: 0;
+        padding-top: 80px;
+      }
+
+      header {
+        left: 0;
+      }
+
+      .open-btn {
+        display: block;
+      }
+    }
+  </style>
 </head>
 <body>
-
-<div id="root"></div>
-
-<script type="text/babel">
-
-function Sidebar({ page, setPage }) {
-  const pages = ['Dashboard', 'Students', 'Attendance', 'Grades', 'Reports', 'Settings'];
-  return (
-    <aside className="sidebar">
-      <h2>CLASS REC</h2>
-      {pages.map(p => (
-        <button
-          key={p}
-          className={`nav-button ${page === p ? 'active' : ''}`}
-          onClick={() => setPage(p)}
-        >
-          {p}
-        </button>
-      ))}
-    </aside>
-  );
-}
-
-function Dashboard({ loggedInUser, setPage }) {
-  return (
-    <>
-      <h1>Welcome, {loggedInUser}!</h1>
-      <div className="dashboard-cards">
-        <div className="card">
-          <h3>Today's Schedule</h3>
-          <p>No classes today (mock)</p>
+    <header>
+        <h3>Class Management Record</h3>
+        <div class="header-buttons">
+            <button class="btn sign-in" onclick="window.location.href='signin.html'">Sign in</button>
+            <button class="btn sign-up" onclick="window.location.href='signup.html'">Sign Up</button>
         </div>
-        <div className="card">
-          <h3>Pending Tasks</h3>
-          <p>No pending tasks</p>
-        </div>
-      </div>
-      <button className="primary-btn" onClick={() => setPage('Students')}>Go to Students</button>
-    </>
-  );
-}
+    </header>
 
-function Students() {
-  const [students, setStudents] = React.useState([  
-  ]);
+  <!-- Main Content -->
+  <div class="main-content">
+    <h1>Welcome</h1>
+    <p>This is your class record system. You can manage and view your data here. 
+       On desktop, the sidebar is always visible, while on mobile, you can toggle it with the ☰ button.</p>
+  </div>
 
-  const [showForm, setShowForm] = React.useState(false);
-  const [newStudent, setNewStudent] = React.useState({
-    id: '',
-    name: '',
-    className: '',
-    averageGrade: '',
-  });
+  <script>
+    // Toggle sidebar on mobile
+    const toggleBtn = document.getElementById("toggleBtn");
+    const sidebar = document.querySelector(".sidebar");
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setNewStudent(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleAddStudent = (e) => {
-    e.preventDefault();
-
-    if (
-      !newStudent.id.trim() ||
-      !newStudent.name.trim() ||
-      !newStudent.className.trim() ||
-      newStudent.averageGrade === ''
-    ) {
-      alert('Please fill out all fields.');
-      return;
-    }
-
-    if (students.find(s => s.id === newStudent.id)) {
-      alert('Student ID must be unique.');
-      return;
-    }
-
-    setStudents(prev => [...prev, {
-      id: newStudent.id,
-      name: newStudent.name,
-      className: newStudent.className,
-      averageGrade: parseFloat(newStudent.averageGrade),
-    }]);
-
-    setNewStudent({ id: '', name: '', className: '', averageGrade: '' });
-    setShowForm(false);
-  };
-
-  return (
-    <>
-      <h1>Students</h1>
-      <div className="students-list">
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th><th>Name</th><th>Class</th><th>Average Grade (%)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {students.map(s => (
-              <tr key={s.id}>
-                <td>{s.id}</td>
-                <td>{s.name}</td>
-                <td>{s.className}</td>
-                <td>{s.averageGrade}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {showForm ? (
-          <form onSubmit={handleAddStudent} className="add-student-form">
-            <input
-              type="text"
-              name="id"
-              placeholder="ID"
-              value={newStudent.id}
-              onChange={handleChange}
-            />
-            <input
-              type="text"
-              name="name"
-              placeholder="Name"
-              value={newStudent.name}
-              onChange={handleChange}
-            />
-            <input
-              type="text"
-              name="className"
-              placeholder="Class"
-              value={newStudent.className}
-              onChange={handleChange}
-            />
-            <input
-              type="number"
-              step="0.1"
-              min="0"
-              max="100"
-              name="averageGrade"
-              placeholder="Average Grade (%)"
-              value={newStudent.averageGrade}
-              onChange={handleChange}
-            />
-            <button type="submit" className="primary-btn">Add Student</button>
-            <button type="button" onClick={() => setShowForm(false)} style={{ marginLeft: '10px' }}>Cancel</button>
-          </form>
-        ) : (
-          <button className="primary-btn" onClick={() => setShowForm(true)}>+ Add New Student</button>
-        )}
-      </div>
-    </>
-  );
-}
-
-
-function Login({ onLogin }) {
-  const [username, setUsername] = React.useState('');
-  const [password, setPassword] = React.useState('');
-  const [error, setError] = React.useState('');
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    if (username.trim() === '') {
-      setError('Username is required');
-      return;
-    }
-    onLogin(username);
-  };
-
-  return (
-    <div className="login-container">
-        <form onSubmit={handleSubmit} className="login-form">
-            <label>
-            <h2>Login to Class Record Management</h2>
-          Username:
-          <input
-            type="text"
-            value={username}
-            onChange={e => { setUsername(e.target.value); setError(''); }}
-            autoFocus
-          />
-        </label>
-        <label>
-          Password:
-          <input
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-          />
-        </label>
-        {error && <p className="error">{error}</p>}
-        <button type="submit" className="primary-btn">Login</button>
-      </form>
-    </div>
-  );
-}
-
-function App() {
-  const [page, setPage] = React.useState('Dashboard');
-  const [loggedInUser, setLoggedInUser] = React.useState(null);
-
-  if (!loggedInUser) {
-    return <Login onLogin={setLoggedInUser} />;
-  }
-
-  return (
-    <>
-      <Sidebar page={page} setPage={setPage} />
-      <main className="main-content">
-        {page === 'Dashboard' && <Dashboard loggedInUser={loggedInUser} setPage={setPage} />}
-        {page === 'Students' && <Students />}
-        {page !== 'Dashboard' && page !== 'Students' && (
-          <h1>{page} page is under construction.</h1>
-        )}
-      </main>
-    </>
-  );
-}
-
-
-
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-
-</script>
-
+    toggleBtn.addEventListener("click", () => {
+      sidebar.classList.toggle("active");
+    });
+  </script>
 </body>
 </html>
