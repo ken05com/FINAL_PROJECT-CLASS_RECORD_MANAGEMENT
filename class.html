@@ -13,7 +13,7 @@
     
     <!-- Sidebar -->
     <div class="sidebar">
-        <h2>DASHBOARD</h2>
+        <h2>CLASS RECORD</h2>
         <ul>
             <li><a href="dashboard.html"><img src="image/home.png" alt="">   Dashboard</a></li>
             <li><a href="class.html"><img src="image/books.png" alt="">   Class</a></li>
@@ -23,7 +23,7 @@
     
     <header class="index-header">
         <button class="open-btn">☰</button>
-        <h3 class="open-h3">DASHBOARD</h3>
+        <h3 class="open-h3">CLASS RECORD</h3>
         <div class="user">
             <button><img src="image/user.png" alt=""></button>
             <div>
@@ -40,11 +40,32 @@
     <!-- Toggle button for mobile -->
 
     <!-- Main content -->
-    <div class="main-content">
-        <h1>Welcome</h1>
-        <p>This is your class record system. You can manage and view your data here. 
-        On desktop, the sidebar is always visible, while on mobile, you can toggle it with the ☰ button.</p>
+ <div class="main-content">
+        <h1>Create a New Class</h1>
+        <p>Fill out the form below to set up a new class. Once submitted, you can begin adding assignments and managing students.</p>
+        
+        <div class="class-form">
+            <p>Please Add a Class & Semester</p>
+            
+            <input id="addedClass" type="text" placeholder="Add Class Name" required />
+
+            <select id="semester-select" name="semester" required>
+                <option value="" disabled selected>Please select a Semester</option>
+                <option value="1st Semester">1st Semester</option>
+                <option value="2nd Semester">2nd Semester</option>
+                <option value="Summer">Summer</option>
+            </select>
+            
+            <button class="btn btn-submit" onclick="addClass()">Add Class</button>
+        </div>
+        
+        <div class="availableclass-header">
+            <h3>Available Classes</h3> 
+        </div>
+        
+        <div class="classes-form" id="availableclass"></div>
     </div>
+
 
     <script src="Login-script.js"></script>
 </body>

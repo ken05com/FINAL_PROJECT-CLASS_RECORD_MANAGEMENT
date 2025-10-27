@@ -1,189 +1,190 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Class Record</title>
-  <style>
-    /* Reset default margins and fonts */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: "Poppins", sans-serif;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class Record</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <style>
+        /* Reset default margins and fonts */
+        * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: poppins;
+        }
 
-    body {
-    background: #131314;
-    color: white;
-    display: flex;
-    min-height: 100vh;
-    }
+        body {
+        background: #131314;
+        color: white;
+        display: flex;
+        min-height: 100vh;
+        }
 
-    /* Sidebar styling */
-    .sidebar {
-      width: 250px;
-      background: #2c3e50;
-      color: #fff;
-      position: fixed;
-      top: 0;
-      left: 0;
-      bottom: 0;
-      padding: 20px;
-      transition: transform 0.3s ease;
-    }
-
-    .sidebar h2 {
-      margin-bottom: 20px;
-      text-align: center;
-      font-size: 22px;
-      letter-spacing: 1px;
-    }
-
-    .sidebar ul {
-      list-style: none;
-    }
-
-    .sidebar ul li {
-      padding: 12px 10px;
-      border-radius: 8px;
-      transition: 0.3s;
-    }
-
-    .sidebar ul li:hover {
-      background: #34495e;
-      cursor: pointer;
-    }
-
-    /* Main content */
-    .main-content {
-      margin-left: 250px;
-      padding: 160px 80px;
-      flex: 1;
-    }
-
-    /* Header styling */
-    header {
+        /* Sidebar styling */
+        .sidebar {
+        width: 250px;
+        background: #2c3e50;
+        color: #fff;
         position: fixed;
         top: 0;
         left: 0;
-        right: 0;
-        height: 60px;
-        /* background: #34495e; */
-        color: #fff;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0 20px;
-        font-size: 20px;
-        font-weight: bold;
+        bottom: 0;
+        padding: 20px;
+        transition: transform 0.3s ease;
+        }
+
+        .sidebar h2 {
+        margin-bottom: 20px;
+        text-align: center;
+        font-size: 22px;
         letter-spacing: 1px;
-        z-index: 1000;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    }
+        }
 
-    .header-buttons {
-        display: flex;
-        gap: 10px;
-    }
+        .sidebar ul {
+        list-style: none;
+        }
 
-        /* Base button style */
-    .btn {
-        border: none;
+        .sidebar ul li {
+        padding: 12px 10px;
         border-radius: 8px;
-        padding: 8px 14px;
-        font-size: 14px;
+        transition: 0.3s;
+        }
+
+        .sidebar ul li:hover {
+        background: #34495e;
         cursor: pointer;
-        font-weight: 600;
-        transition: 0.3s ease;
-    }
+        }
 
-        /* Sign In Button */
-    .btn.sign-in {
-        background-color: transparent;
+        /* Main content */
+        .main-content {
+        margin-left: 250px;
+        padding: 160px 80px;
+        flex: 1;
+        }
+
+        /* Header styling */
+        .index-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            color: #ffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 40px;
+            font-size: 20px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 20px;
+        }
+
+            /* Base button style */
+        .btn {
+            border: none;
+            border-radius: 10px;
+            padding: 8px 35px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s ease;
+        }
+
+            /* Sign In Button */
+        .btn.sign-in {
+            background-color: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+        .btn.sign-in:hover {
+            background-color: white;
+            color: #34495e;
+        }
+
+        /* Sign Up Button */
+        .btn.sign-up {
+            background-color: #00b894;
+            color: white;
+        }
+        .btn.sign-up:hover {
+            background-color: #019870;
+        }
+
+
+        /* Open button (mobile only) */
+        .open-btn {
+        display: none;
+        position: fixed;
+        top: 15px;
+        left: 15px;
+        background: #34495e;
         color: white;
-        border: 1px solid white;
-    }
-    .btn.sign-in:hover {
-        background-color: white;
-        color: #34495e;
-    }
+        border: none;
+        font-size: 24px;
+        padding: 8px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        z-index: 1100;
+        }
 
-    /* Sign Up Button */
-    .btn.sign-up {
-        background-color: #00b894;
-        color: white;
-    }
-    .btn.sign-up:hover {
-        background-color: #019870;
-    }
+        /* Responsive rules */
+        @media (max-width: 768px) {
+        .sidebar {
+            transform: translateX(-100%);
+        }
 
+        .sidebar.active {
+            transform: translateX(0);
+        }
 
-    /* Open button (mobile only) */
-    .open-btn {
-      display: none;
-      position: fixed;
-      top: 15px;
-      left: 15px;
-      background: #34495e;
-      color: white;
-      border: none;
-      font-size: 24px;
-      padding: 8px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      z-index: 1100;
-    }
+        .main-content {
+            margin-left: 0;
+            padding-top: 80px;
+        }
 
-    /* Responsive rules */
-    @media (max-width: 768px) {
-      .sidebar {
-        transform: translateX(-100%);
-      }
+        header {
+            left: 0;
+        }
 
-      .sidebar.active {
-        transform: translateX(0);
-      }
-
-      .main-content {
-        margin-left: 0;
-        padding-top: 80px;
-      }
-
-      header {
-        left: 0;
-      }
-
-      .open-btn {
-        display: block;
-      }
-    }
-  </style>
+        .open-btn {
+            display: block;
+        }
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <h3>Class Management Record</h3>
+    <header class="index-header">
+        <h3>Recon</h3>
         <div class="header-buttons">
             <button class="btn sign-in" onclick="window.location.href='signin.html'">Sign in</button>
             <button class="btn sign-up" onclick="window.location.href='signup.html'">Sign Up</button>
         </div>
     </header>
 
-  <!-- Main Content -->
-  <div class="main-content">
-    <h1>Welcome</h1>
-    <p>This is your class record system. You can manage and view your data here. 
-       On desktop, the sidebar is always visible, while on mobile, you can toggle it with the ☰ button.</p>
-  </div>
+    <!-- Main Content -->
+    <div class="main-content">
+        <h1>Welcome</h1>
+        <p>This is Recon your class record management site. You can manage and view your data here.</p>
+    </div>
 
   <script>
-    // Toggle sidebar on mobile
-    const toggleBtn = document.getElementById("toggleBtn");
-    const sidebar = document.querySelector(".sidebar");
+            // Toggle sidebar on mobile
+        const toggleBtn = document.getElementById("toggleBtn");
+        const sidebar = document.querySelector(".sidebar");
 
-    toggleBtn.addEventListener("click", () => {
-      sidebar.classList.toggle("active");
-    });
+        toggleBtn.addEventListener("click", () => {
+        sidebar.classList.toggle("active");
+        });
   </script>
 </body>
 </html>
