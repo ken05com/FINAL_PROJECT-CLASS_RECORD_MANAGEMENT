@@ -1,190 +1,192 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Class Record</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
-    <style>
-        /* Reset default margins and fonts */
-        * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        font-family: poppins;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recon - Class Record Management</title>
 
-        body {
-        background: #131314;
-        color: white;
-        display: flex;
-        min-height: 100vh;
-        }
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
 
-        /* Sidebar styling */
-        .sidebar {
-        width: 250px;
-        background: #2c3e50;
-        color: #fff;
-        position: fixed;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        padding: 20px;
-        transition: transform 0.3s ease;
-        }
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
+    }
 
-        .sidebar h2 {
-        margin-bottom: 20px;
+    body {
+      background: radial-gradient(circle at bottom left, #0f0f0f, #131314 80%);
+      color: #fff;
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* HEADER */
+    .index-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 70px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 60px;
+      z-index: 100;
+      background: transparent;
+    }
+
+    .sign-title {
+      font-size: 22px;
+      color: #00b894;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .header-buttons {
+      display: flex;
+      gap: 20px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 10px;
+      padding: 8px 35px;
+      font-size: 14px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.3s ease;
+    }
+
+    .btn.sign-in {
+      background-color: transparent;
+      color: white;
+    }
+
+    .btn.sign-up {
+      color: white;
+        background-color: transparent;
+    }
+
+    html, body {
+        overflow: hidden;
+    }
+
+    /* MAIN SECTION */
+    .main-content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 100px;
+      margin-top: 80px;
+    }
+
+    .text-section {
+      max-width: 550px;
+      padding-right: 40px;
+      padding-bottom: 300px;
+    }
+
+    .text-section h1 {
+      font-size: 48px;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 20px;
+    }
+
+    .text-section p {
+      color: #cfcfcf;
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+    /* IMAGE SECTION */
+    .image-section {
+      position: relative;
+        width: 631px;  
+      height: 746px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-radius: 15px;
+    }
+
+    .image-section img {
+      width: 100%;
+      height: 100%;
+      border-radius: 15px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .overlay-text {
+      position: absolute;
+      left: 40px;
+      top: 40px;
+      font-size: 75px;
+      font-weight: 700;
+      color: #111;
+      text-transform: uppercase;
+      line-height: 1.2;
+    }
+
+    /* RESPONSIVE DESIGN */
+    @media (max-width: 900px) {
+      .main-content {
+        flex-direction: column;
         text-align: center;
-        font-size: 22px;
-        letter-spacing: 1px;
-        }
+        padding: 40px 30px;
+      }
 
-        .sidebar ul {
-        list-style: none;
-        }
+      .image-section {
+        width: 90%;
+        height: 350px;
+        margin-top: 40px;
+      }
 
-        .sidebar ul li {
-        padding: 12px 10px;
-        border-radius: 8px;
-        transition: 0.3s;
-        }
+      .text-section h1 {
+        font-size: 34px;
+      }
 
-        .sidebar ul li:hover {
-        background: #34495e;
-        cursor: pointer;
-        }
-
-        /* Main content */
-        .main-content {
-        margin-left: 250px;
-        padding: 160px 80px;
-        flex: 1;
-        }
-
-        /* Header styling */
-        .index-header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 60px;
-            color: #ffff;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 40px;
-            font-size: 20px;
-            font-weight: bold;
-            letter-spacing: 1px;
-            z-index: 1000;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        }
-
-        .header-buttons {
-            display: flex;
-            gap: 20px;
-        }
-
-            /* Base button style */
-        .btn {
-            border: none;
-            border-radius: 10px;
-            padding: 8px 35px;
-            font-size: 14px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: 0.3s ease;
-        }
-
-            /* Sign In Button */
-        .btn.sign-in {
-            background-color: transparent;
-            color: white;
-            border: 2px solid white;
-        }
-        .btn.sign-in:hover {
-            background-color: white;
-            color: #34495e;
-        }
-
-        /* Sign Up Button */
-        .btn.sign-up {
-            background-color: #00b894;
-            color: white;
-        }
-        .btn.sign-up:hover {
-            background-color: #019870;
-        }
-
-
-        /* Open button (mobile only) */
-        .open-btn {
-        display: none;
-        position: fixed;
-        top: 15px;
-        left: 15px;
-        background: #34495e;
-        color: white;
-        border: none;
-        font-size: 24px;
-        padding: 8px 12px;
-        border-radius: 6px;
-        cursor: pointer;
-        z-index: 1100;
-        }
-
-        /* Responsive rules */
-        @media (max-width: 768px) {
-        .sidebar {
-            transform: translateX(-100%);
-        }
-
-        .sidebar.active {
-            transform: translateX(0);
-        }
-
-        .main-content {
-            margin-left: 0;
-            padding-top: 80px;
-        }
-
-        header {
-            left: 0;
-        }
-
-        .open-btn {
-            display: block;
-        }
-        }
-    </style>
+      .overlay-text {
+        font-size: 26px;
+        top: 20px;
+        left: 20px;
+      }
+    }
+  </style>
 </head>
-<body>
-    <header class="index-header">
-        <h3>Recon</h3>
-        <div class="header-buttons">
-            <button class="btn sign-in" onclick="window.location.href='signin.html'">Sign in</button>
-            <button class="btn sign-up" onclick="window.location.href='signup.html'">Sign Up</button>
-        </div>
-    </header>
 
-    <!-- Main Content -->
-    <div class="main-content">
-        <h1>Welcome</h1>
-        <p>This is Recon your class record management site. You can manage and view your data here.</p>
+<body>
+  <!-- Header -->
+  <header class="index-header">
+    <h3 class="sign-title">RECON</h3>
+    <div class="header-buttons">
+      <button class="btn sign-in" onclick="window.location.href='signin.html'">Sign In</button>
+      <button class="btn sign-up" onclick="window.location.href='signup.html'">Sign Up</button>
+    </div>
+  </header>
+
+  <!-- Main Landing Section -->
+  <main class="main-content">
+    <div class="text-section">
+      <h1>Class Organized.<br>Mission Complete.</h1>
+      <p>
+        RECON is your essential classroom data hub for quickly managing classes,
+        students, attendance, quiz scores, and grades with total ease and reliability.
+      </p>
     </div>
 
-  <script>
-            // Toggle sidebar on mobile
-        const toggleBtn = document.getElementById("toggleBtn");
-        const sidebar = document.querySelector(".sidebar");
-
-        toggleBtn.addEventListener("click", () => {
-        sidebar.classList.toggle("active");
-        });
-  </script>
+    <div class="image-section">
+      <div class="overlay-text">LET’S<br>DO IT<br>RECON</div>
+      <img src="image/teacher-main-page.png" alt="Teacher Image" />
+    </div>
+  </main>
 </body>
 </html>
