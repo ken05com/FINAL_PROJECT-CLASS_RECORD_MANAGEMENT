@@ -1,70 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Class Details</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="Login-Style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Add Students</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="Login-Style.css" />
 </head>
 <body>
-    
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <h2>CLASS DETAILS</h2>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h2>CLASS DETAILS</h2>
+    <ul>
+      <li><a href="dashboard.html"><img src="image/home.png" alt=""> Dashboard</a></li>
+      <li><a href="class.html"><img src="image/books.png" alt=""> Class</a></li>
+    </ul>
+  </div>
+
+  <!-- Header -->
+  <header class="index-header">
+    <button class="open-btn">☰</button>
+    <h3 class="open-h3">ADD STUDENTS</h3>
+    <div class="user">
+      <button><img src="image/user.png" alt=""></button>
+      <div>
         <ul>
-            <li><a href="dashboard.html"><img src="image/home.png" alt="">   Dashboard</a></li>
-            <li><a href="class.html"><img src="image/books.png" alt="">   Class</a>
-            </li>
+          <li><a href="">Profile</a><a href="index.html" class="logout">Log out</a></li>
         </ul>
-        
+      </div>
     </div>
-    
-    <header class="index-header">
-        <button class="open-btn">☰</button>
-        <h3 class="open-h3">DASHBOARD</h3>
-        <div class="user">
-            <button><img src="image/user.png" alt=""></button>
-            <div>
-                <ul>
-                    <li>
-                        <a href="">Profile</a>
-                        <a href="index.html" class="logout">Log out</a>
-                    </li>
-                </ul>
-            </div>  
-        </div>
-    </header>
-        
-    <!-- Toggle button for mobile -->
+  </header>
 
-    <!-- Main content -->
-    <div class="main-content">
-        <button class="back-btn" onclick="window.location.href='class-details.html'">BACK</button>
-        <h1 class="subjectname">SUBJECT NAME</h1>
-        <h2>Add Students</h2>
-        <p>Enter the student's full name below:</p>
+  <!-- Main content -->
+  <div class="main-content">
+    <button class="back-btn" id="backBtn">BACK</button>
+    <h1 class="subjectname">SUBJECT NAME</h1>
+    <h2>Add Students</h2>
+    <p>Enter the student's full name below:</p>
 
-        <div class="class-name">
-            <p>Please Add a Student's full name</p>
-            <input id="studentNameInput" type="text" placeholder="Add Students Name" required />
-            <button class="btn btn-add" onclick="addStudent()">Add Student</button>
-        </div>
-
-        <div class="table-container">
-            <table id="recordTable">
-                <thead>
-                    <tr>
-                    <th>Student Name</th>
-                    <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody"></tbody>
-            </table>
-        </div>
+    <div class="class-name">
+      <p>Please Add a Student's full name</p>
+      <input id="studentNameInput" type="text" placeholder="Add Student Name" required />
+      <button class="btn btn-add" onclick="addStudent()">Add Student</button>
     </div>
-    <script src="Login-script.js"></script>
+
+    <div class="table-container">
+      <table id="recordTable">
+        <thead>
+          <tr>
+            <th>Student Name</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="Login-script.js"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const classId = params.get("classId");
+    document.getElementById("backBtn").onclick = () => {
+      window.location.href = `class-details.html?classId=${classId}`;
+    };
+  </script>
 </body>
 </html>

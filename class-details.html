@@ -6,7 +6,7 @@
     <title>RECON Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="Login-Style.css" />
 </head>
 <body>
@@ -23,7 +23,7 @@
   <!-- Header -->
   <header class="index-header">
     <button class="open-btn">&#9776;</button>
-    <h3>BSIT - 1</h3>
+    <h3 class="subjectname">BSIT - 1</h3>
     <div class="user">
       <button>Profile</button>
       <div>
@@ -39,69 +39,63 @@
   <main class="main-content">
     <button class="back-btn" onclick="window.location.href='class.html'">BACK</button>
     <section class="dashboard-section">
-      <h1 class="subjectname">Class Management</h1>
+      <h1>Class Management</h1>
       <div class="cards-container">
-        <button class="card-btn" onclick="window.location.href='add-students.html'">
+        <button class="card-btn" id="addStudentsBtn">
             <div class="card">
-                <img src="https://via.placeholder.com/120" alt="Class Settings" />
+                <img src="https://via.placeholder.com/120" alt="Add Students" />
                 <h2>Add Students</h2>
-                <p>Modify class details and preferences.</p>
+                <p>Register new students into this class.</p>
             </div>
         </button>
 
-        <button class="card-btn" onclick="window.location.href='add-scores.html'">
+        <button class="card-btn" id="addScoresBtn">
             <div class="card">
-                <img src="https://via.placeholder.com/120" alt="Class Settings" />
+                <img src="https://via.placeholder.com/120" alt="Score Management" />
                 <h2>Score Management</h2>
-                <p>Modify class details and preferences.</p>
+                <p>Record and update quiz and exam scores.</p>
             </div>
         </button>
 
-        <button class="card-btn" onclick="window.location.href='add-grades.html'">
+        <button class="card-btn" id="addGradesBtn">
             <div class="card">
-                <img src="https://via.placeholder.com/120" alt="Class Settings" />
-                <h2>Grade</h2>
-                <p>Modify class details and preferences.</p>
+                <img src="https://via.placeholder.com/120" alt="Grades" />
+                <h2>Grades</h2>
+                <p>Compute final grades and remarks automatically.</p>
             </div>
         </button>
 
-        <button class="card-btn" onclick="window.location.href='add-attendances.html'">
+        <button class="card-btn" id="addAttendanceBtn">
             <div class="card">
-                <img src="https://via.placeholder.com/120" alt="Class Settings" />
+                <img src="https://via.placeholder.com/120" alt="Attendance" />
                 <h2>Attendance</h2>
-                <p>Modify class details and preferences.</p>
+                <p>Monitor and track class attendance records.</p>
             </div>
         </button>
-        <!-- <div class="card">
-          <img src="https://via.placeholder.com/120" alt="Add Students" />
-          <h2>Add Students</h2>
-          <p>Register new students into this class.</p>
-          <button class="btn btn-add">Open</button>
-        </div>
-
-        <div class="card">
-          <img src="https://via.placeholder.com/120" alt="Score Management" />
-          <h2>Score Management</h2>
-          <p>Record and update quiz and exam scores.</p>
-          <button class="btn btn-add">Open</button>
-        </div>
-
-        <div class="card">
-          <img src="https://via.placeholder.com/120" alt="Grades" />
-          <h2>Grades</h2>
-          <p>Compute final grades and remarks automatically.</p>
-          <button class="btn btn-add">Open</button>
-        </div>
-
-        <div class="card">
-          <img src="https://via.placeholder.com/120" alt="Attendance" />
-          <h2>Attendance</h2>
-          <p>Monitor and track class attendance records.</p>
-          <button class="btn btn-add">Open</button>
-        </div> -->
       </div>
     </section>
   </main>
+
+  <script>
+    // ✅ Get classId from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const classId = urlParams.get("classId");
+
+    if (!classId) {
+      alert("No class selected. Returning to class list.");
+      window.location.href = "class.html";
+    }
+
+    // ✅ Automatically add classId to all 4 card buttons
+    document.getElementById("addStudentsBtn").onclick = () =>
+      window.location.href = `add-students.html?classId=${classId}`;
+    document.getElementById("addScoresBtn").onclick = () =>
+      window.location.href = `add-scores.html?classId=${classId}`;
+    document.getElementById("addGradesBtn").onclick = () =>
+      window.location.href = `add-grades.html?classId=${classId}`;
+    document.getElementById("addAttendanceBtn").onclick = () =>
+      window.location.href = `add-attendances.html?classId=${classId}`;
+  </script>
 
   <script src="script.js"></script>
 </body>

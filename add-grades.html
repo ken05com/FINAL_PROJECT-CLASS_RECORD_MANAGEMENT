@@ -6,10 +6,7 @@
   <title>Add Grades</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
-    rel="stylesheet"
-  />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="Login-Style.css" />
 </head>
 <body>
@@ -30,10 +27,7 @@
       <button><img src="image/user.png" alt=""></button>
       <div>
         <ul>
-          <li>
-            <a href="">Profile</a>
-            <a href="index.html" class="logout">Log out</a>
-          </li>
+          <li><a href="">Profile</a><a href="index.html" class="logout">Log out</a></li>
         </ul>
       </div>
     </div>
@@ -41,22 +35,18 @@
 
   <!-- Main content -->
   <div class="main-content">
-    <button class="back-btn" onclick="window.location.href='class-details.html'">BACK</button>
+    <button class="back-btn" id="backBtn">BACK</button>
     <h1 class="subjectname">SUBJECT NAME</h1>
-    <h2>Grade Computation</h2>
-    <p>Review or update the final grades for each student.</p>
+    <h2>Grade Management</h2>
+    <p>Compute final grades and remarks automatically.</p>
 
     <div class="table-container">
       <table id="recordTable">
         <thead>
           <tr>
             <th>Student Name</th>
-            <th>Prelim</th>
-            <th>Midterm</th>
-            <th>Finals</th>
-            <th>Final Grade</th>
-            <th>Remark</th>
-            <th>Action</th>
+            <th>Grade</th>
+            <th>Remarks</th>
           </tr>
         </thead>
         <tbody id="tableBody"></tbody>
@@ -65,5 +55,12 @@
   </div>
 
   <script src="Login-script.js"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const classId = params.get("classId");
+    document.getElementById("backBtn").onclick = () => {
+      window.location.href = `class-details.html?classId=${classId}`;
+    };
+  </script>
 </body>
 </html>

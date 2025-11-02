@@ -1,5 +1,5 @@
 // =============================
-// Login-script.js (final, modular)
+// Login-script.js (final, stable)
 // =============================
 
 // -----------------------------
@@ -25,7 +25,7 @@ if (openBtn && sidebar) {
 }
 
 // -----------------------------
-// CLASS STORAGE helpers (shared)
+// STORAGE HELPERS (shared)
 // -----------------------------
 function readClasses() {
   return JSON.parse(localStorage.getItem("classesList")) || [];
@@ -36,11 +36,16 @@ function writeClasses(list) {
 function getClassIdFromURL() {
   return new URLSearchParams(window.location.search).get("classId");
 }
+function studentsKey(classId) {
+  return `studentsList_${classId}`;
+}
 function loadStudentsFor(classId) {
-  return JSON.parse(localStorage.getItem(`studentsList_${classId}`)) || [];
+  if (!classId) return [];
+  return JSON.parse(localStorage.getItem(studentsKey(classId))) || [];
 }
 function saveStudentsFor(classId, list) {
-  localStorage.setItem(`studentsList_${classId}`, JSON.stringify(list));
+  if (!classId) return;
+  localStorage.setItem(studentsKey(classId), JSON.stringify(list));
 }
 function getClassById(classId) {
   const list = readClasses();
@@ -80,6 +85,7 @@ function getClassById(classId) {
     });
   }
 
+  // expose global addClass because your HTML calls it inline
   window.addClass = function() {
     const nameInput = document.getElementById("addedClass");
     const semesterSelect = document.getElementById("semester-select");
@@ -90,20 +96,19 @@ function getClassById(classId) {
     const newClass = { id: Date.now(), name: className, semester };
     classesList.push(newClass);
     writeClasses(classesList);
+    // ensure an empty student list is created for this class (keeps independence)
+    saveStudentsFor(newClass.id, []);
     nameInput.value = "";
     semesterSelect.value = "";
     renderClasses();
   };
 
+  // expose removeClass globally (HTML uses inline)
   window.removeClass = function(index) {
     if (!confirm("Remove this class and all its student data?")) return;
     const c = classesList[index];
     if (c?.id) {
-      // remove related data keys (students etc.)
-      localStorage.removeItem(`studentsList_${c.id}`);
-      localStorage.removeItem(`scoresList_${c.id}`);
-      localStorage.removeItem(`gradesList_${c.id}`);
-      localStorage.removeItem(`attendanceList_${c.id}`);
+      localStorage.removeItem(studentsKey(c.id));
     }
     classesList.splice(index, 1);
     writeClasses(classesList);
@@ -114,7 +119,9 @@ function getClassById(classId) {
 })();
 
 // -----------------------------
-// class-details.html module (cards + optional students preview)
+// class-details.html module
+// - Patches card links to include classId automatically
+// - Optionally shows a student preview table if present
 // -----------------------------
 (function classDetailsModule() {
   if (!window.location.pathname.endsWith("class-details.html")) return;
@@ -127,29 +134,74 @@ function getClassById(classId) {
     return;
   }
 
-  // update header title
+  // Update heading
   const subjectEl = document.querySelector(".subjectname");
   if (subjectEl) subjectEl.textContent = `${currentClass.name} - ${currentClass.semester}`;
 
-  // wire up card buttons (if present)
-  const btnMap = [
-    { id: "addStudentsBtn", page: "add-students.html" },
-    { id: "addScoresBtn", page: "add-score.html" },
-    { id: "addGradesBtn", page: "add-grade.html" },
-    { id: "addAttendanceBtn", page: "add-attendance.html" }
-  ];
-  btnMap.forEach(({id, page}) => {
-    const btn = document.getElementById(id);
-    if (btn) btn.onclick = () => window.location.href = `${page}?classId=${classId}`;
+  // Patch card buttons (handles many HTML variants)
+  // We search for any element with class "card-btn" and modify its onclick href
+  document.querySelectorAll(".card-btn").forEach(btn => {
+    // 1) If element has a dataset.target attribute, use it
+    if (btn.dataset && btn.dataset.target) {
+      btn.onclick = (e) => {
+        e.preventDefault();
+        window.location.href = `${btn.dataset.target}${btn.dataset.target.includes('?') ? '&' : '?'}classId=${classId}`;
+      };
+      return;
+    }
+
+    // 2) If it has an inline onclick that sets window.location.href, extract and patch
+    const onclickAttr = btn.getAttribute && btn.getAttribute('onclick');
+    if (onclickAttr && onclickAttr.includes('window.location.href')) {
+      const m = onclickAttr.match(/window\.location\.href\s*=\s*['"]([^'"]+)['"]/);
+      if (m && m[1]) {
+        const targetUrl = m[1];
+        btn.removeAttribute('onclick');
+        btn.style.cursor = 'pointer';
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          // append classId if not already present
+          const final = targetUrl + (targetUrl.includes('?') ? '&' : '?') + 'classId=' + encodeURIComponent(classId);
+          window.location.href = final;
+        });
+        return;
+      }
+    }
+
+    // 3) As fallback: if it's a button wrapping a link or has inner <a>, patch anchor href
+    const anchor = btn.querySelector && btn.querySelector('a[href]');
+    if (anchor) {
+      const href = anchor.getAttribute('href');
+      if (href) {
+        anchor.addEventListener('click', (e) => {
+          e.preventDefault();
+          const final = href + (href.includes('?') ? '&' : '?') + 'classId=' + encodeURIComponent(classId);
+          window.location.href = final;
+        });
+        return;
+      }
+    }
+
+    // 4) Last fallback: if button text hints at target, map common words to filenames
+    const txt = (btn.textContent || '').toLowerCase();
+    if (txt.includes('student')) {
+      btn.addEventListener('click', () => window.location.href = `add-students.html?classId=${classId}`);
+    } else if (txt.includes('score')) {
+      btn.addEventListener('click', () => window.location.href = `add-scores.html?classId=${classId}`);
+    } else if (txt.includes('grade')) {
+      btn.addEventListener('click', () => window.location.href = `add-grades.html?classId=${classId}`);
+    } else if (txt.includes('attend')) {
+      btn.addEventListener('click', () => window.location.href = `add-attendances.html?classId=${classId}`);
+    }
   });
 
-  // If this page contains a students table (optional), render it
+  // Optional: if page includes a students table (preview), render it
   const tableBody = document.getElementById("tableBody");
   if (tableBody) {
     let students = loadStudentsFor(classId);
     function renderStudents() {
       tableBody.innerHTML = "";
-      if (students.length === 0) {
+      if (!students || students.length === 0) {
         tableBody.innerHTML = `<tr><td colspan="2" style="text-align:center;">No students added yet.</td></tr>`;
         return;
       }
@@ -165,6 +217,7 @@ function getClassById(classId) {
         tableBody.appendChild(tr);
       });
     }
+    // expose small helpers used by inline onclicks
     window.editStudentFromDetails = function(index) {
       const studentsList = loadStudentsFor(classId);
       const newName = prompt("Edit Student Name:", studentsList[index]?.name || "");
@@ -188,29 +241,30 @@ function getClassById(classId) {
 // -----------------------------
 // add-students.html module
 // -----------------------------
+// This defines window.addStudent(), window.editStudent(), window.deleteStudent() for inline HTML.
 (function addStudentsModule() {
+  // support filenames: add-students.html
   if (!window.location.pathname.endsWith("add-students.html")) return;
 
   const classId = getClassIdFromURL();
   const currentClass = getClassById(classId);
-  if (!currentClass) {
+  if (!classId || !currentClass) {
     alert("No class selected. Returning to class list.");
     window.location.href = "class.html";
     return;
   }
 
-  // update header
+  // update header title if present
   const subjectEl = document.querySelector(".subjectname");
   if (subjectEl) subjectEl.textContent = `${currentClass.name} - ${currentClass.semester}`;
 
-  // students list
   let students = loadStudentsFor(classId);
-
   const tableBody = document.getElementById("tableBody");
+
   function render() {
     if (!tableBody) return;
     tableBody.innerHTML = "";
-    if (students.length === 0) {
+    if (!students || students.length === 0) {
       tableBody.innerHTML = `<tr><td colspan="2" style="text-align:center;">No students added yet.</td></tr>`;
       return;
     }
@@ -227,19 +281,20 @@ function getClassById(classId) {
     });
   }
 
-  // expose functions used by HTML buttons (global, because HTML inline calls them)
+  // global functions (HTML calls these inline)
   window.addStudent = function() {
     const nameInput = document.getElementById("studentNameInput");
     if (!nameInput) return;
     const name = nameInput.value.trim();
     if (!name) return alert("Please enter a student's name.");
-    students.push({
+    const newStudent = {
       id: Date.now(),
       name,
       scores: { quiz: "", exam: "", project: "" },
-      grades: { final: "" },
+      grades: { prelim: "", midterm: "", finals: "", finalGrade: "", remark: "" },
       attendance: []
-    });
+    };
+    students.push(newStudent);
     saveStudentsFor(classId, students);
     nameInput.value = "";
     render();
@@ -261,21 +316,22 @@ function getClassById(classId) {
     render();
   };
 
-  // auto-save on leave
+  // auto-save on leave, just in case
   window.addEventListener("beforeunload", () => saveStudentsFor(classId, students));
 
   render();
 })();
 
 // -----------------------------
-// add-score.html module
+// add-scores.html module
 // -----------------------------
 (function addScoresModule() {
-  if (!window.location.pathname.endsWith("add-score.html")) return;
+  // accept both add-score.html and add-scores.html filenames
+  if (!window.location.pathname.endsWith("add-score.html") && !window.location.pathname.endsWith("add-scores.html")) return;
 
   const classId = getClassIdFromURL();
   const currentClass = getClassById(classId);
-  if (!currentClass) {
+  if (!classId || !currentClass) {
     alert("No class selected. Returning to class list.");
     window.location.href = "class.html";
     return;
@@ -290,11 +346,11 @@ function getClassById(classId) {
   function render() {
     if (!tableBody) return;
     tableBody.innerHTML = "";
-    if (students.length === 0) {
+    if (!students || students.length === 0) {
       tableBody.innerHTML = `<tr><td colspan="5">No students added yet.</td></tr>`;
       return;
     }
-    students.forEach((s) => {
+    students.forEach(s => {
       if (!s.scores) s.scores = { quiz: "", exam: "", project: "" };
       const tr = document.createElement("tr");
       tr.innerHTML = `
@@ -308,7 +364,6 @@ function getClassById(classId) {
     });
   }
 
-  // input handler (delegated)
   document.addEventListener("input", (e) => {
     if (!e.target.classList.contains("score-input")) return;
     const id = Number(e.target.dataset.id);
@@ -321,7 +376,6 @@ function getClassById(classId) {
     saveStudentsFor(classId, students);
   });
 
-  // clear handler
   document.addEventListener("click", (e) => {
     if (!e.target.matches(".btn-clear")) return;
     const id = Number(e.target.dataset.id);
@@ -333,21 +387,21 @@ function getClassById(classId) {
     render();
   });
 
-  // auto-save on leave
   window.addEventListener("beforeunload", () => saveStudentsFor(classId, students));
 
   render();
 })();
 
 // -----------------------------
-// add-grade.html module (auto compute / store final grade)
+// add-grades.html module
 // -----------------------------
 (function addGradesModule() {
-  if (!window.location.pathname.endsWith("add-grade.html")) return;
+  // accept add-grade.html and add-grades.html
+  if (!window.location.pathname.endsWith("add-grade.html") && !window.location.pathname.endsWith("add-grades.html")) return;
 
   const classId = getClassIdFromURL();
   const currentClass = getClassById(classId);
-  if (!currentClass) {
+  if (!classId || !currentClass) {
     alert("No class selected. Returning to class list.");
     window.location.href = "class.html";
     return;
@@ -360,7 +414,6 @@ function getClassById(classId) {
   const tableBody = document.getElementById("tableBody");
 
   function computeFinal(prelim, midterm, finals) {
-    // simple average; change weighting if you need
     const p = Number(prelim) || 0;
     const m = Number(midterm) || 0;
     const f = Number(finals) || 0;
@@ -370,7 +423,7 @@ function getClassById(classId) {
   function render() {
     if (!tableBody) return;
     tableBody.innerHTML = "";
-    if (students.length === 0) {
+    if (!students || students.length === 0) {
       tableBody.innerHTML = `<tr><td colspan="6">No students added yet.</td></tr>`;
       return;
     }
@@ -389,7 +442,6 @@ function getClassById(classId) {
     });
   }
 
-  // delegated input handler: update prelim/midterm/finals and compute final + remark
   document.addEventListener("input", (e) => {
     if (!e.target.classList.contains("grade-input")) return;
     const id = Number(e.target.dataset.id);
@@ -399,13 +451,10 @@ function getClassById(classId) {
     if (!student) return;
     student.grades = student.grades || {};
     student.grades[field] = val;
-    // compute final
     const final = computeFinal(student.grades.prelim, student.grades.midterm, student.grades.finals);
     student.grades.finalGrade = final;
-    student.grades.remark = final >= 75 ? "Passed" : "Failed"; // adjust pass threshold if needed
+    student.grades.remark = final >= 75 ? "Passed" : "Failed";
     saveStudentsFor(classId, students);
-    // update cells visually (fast)
-    // find the row and update final & remark
     const row = [...document.querySelectorAll("#tableBody tr")].find(r => r.querySelector(`.grade-input[data-id='${id}']`));
     if (row) {
       const finalCell = row.querySelector(".final-grade-cell");
@@ -421,14 +470,15 @@ function getClassById(classId) {
 })();
 
 // -----------------------------
-// add-attendance.html module (Option B: only today's attendance matters)
+// add-attendance.html module
 // -----------------------------
 (function addAttendanceModule() {
-  if (!window.location.pathname.endsWith("add-attendance.html")) return;
+  // accept add-attendance.html and add-attendances.html
+  if (!window.location.pathname.endsWith("add-attendance.html") && !window.location.pathname.endsWith("add-attendances.html")) return;
 
   const classId = getClassIdFromURL();
   const currentClass = getClassById(classId);
-  if (!currentClass) {
+  if (!classId || !currentClass) {
     alert("No class selected. Returning to class list.");
     window.location.href = "class.html";
     return;
@@ -439,21 +489,19 @@ function getClassById(classId) {
 
   let students = loadStudentsFor(classId);
   const tableBody = document.getElementById("tableBody");
-
-  // We'll store only today's status key inside each student as `attendanceToday: "present"|"absent"`
   const todayKey = new Date().toLocaleDateString();
 
   function render() {
     if (!tableBody) return;
     tableBody.innerHTML = "";
-    if (students.length === 0) {
+    if (!students || students.length === 0) {
       tableBody.innerHTML = `<tr><td colspan="3">No students added yet.</td></tr>`;
       return;
     }
     students.forEach(s => {
-      // ensure attendance array exists (keeps history if you want)
       s.attendance = s.attendance || [];
-      const lastStatus = s.attendance.length ? s.attendance.at(-1) : "";
+      const last = s.attendance.length ? s.attendance.at(-1) : null;
+      const lastStatus = last ? last.status : "";
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${s.name}</td>
@@ -472,15 +520,11 @@ function getClassById(classId) {
   document.addEventListener("change", (e) => {
     if (!e.target.classList.contains("attendance-select")) return;
     const id = Number(e.target.dataset.id);
-    const val = e.target.value; // "present" or "absent"
+    const val = e.target.value;
     const student = students.find(x => x.id === id);
     if (!student) return;
-    // Option B: only today's attendance matters — overwrite last entry
     if (!student.attendance) student.attendance = [];
-    // remove last entry if it's same date? we store only status strings, but to keep consistent:
-    // We'll store attendance as array of {date, status}
     const dateStatus = { date: todayKey, status: val };
-    // if last entry date === today -> replace
     if (student.attendance.length && student.attendance.at(-1).date === todayKey) {
       student.attendance[student.attendance.length - 1] = dateStatus;
     } else {
