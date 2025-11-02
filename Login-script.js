@@ -1,201 +1,495 @@
-// SIDEBAR TOGGLE
-const openBtn = document.querySelector('.open-btn');
-const sidebar = document.querySelector('.sidebar');
+// =============================
+// Login-script.js (final, modular)
+// =============================
 
-openBtn.addEventListener('click', () => {
-  sidebar.classList.toggle('active');
-  openBtn.classList.toggle('hidden');
-});
+// -----------------------------
+// SIDEBAR TOGGLE (shared)
+// -----------------------------
+const openBtn = document.querySelector(".open-btn");
+const sidebar = document.querySelector(".sidebar");
 
-document.addEventListener('click', (e) => {
-  if (window.innerWidth <= 768 && sidebar.classList.contains('active')) {
-    if (!sidebar.contains(e.target) && !openBtn.contains(e.target)) {
-      sidebar.classList.remove('active');
-      openBtn.classList.remove('hidden');
+if (openBtn && sidebar) {
+  openBtn.addEventListener("click", () => {
+    sidebar.classList.toggle("active");
+    openBtn.classList.toggle("hidden");
+  });
+
+  document.addEventListener("click", (e) => {
+    if (window.innerWidth <= 768 && sidebar.classList.contains("active")) {
+      if (!sidebar.contains(e.target) && !openBtn.contains(e.target)) {
+        sidebar.classList.remove("active");
+        openBtn.classList.remove("hidden");
+      }
     }
+  });
+}
+
+// -----------------------------
+// CLASS STORAGE helpers (shared)
+// -----------------------------
+function readClasses() {
+  return JSON.parse(localStorage.getItem("classesList")) || [];
+}
+function writeClasses(list) {
+  localStorage.setItem("classesList", JSON.stringify(list));
+}
+function getClassIdFromURL() {
+  return new URLSearchParams(window.location.search).get("classId");
+}
+function loadStudentsFor(classId) {
+  return JSON.parse(localStorage.getItem(`studentsList_${classId}`)) || [];
+}
+function saveStudentsFor(classId, list) {
+  localStorage.setItem(`studentsList_${classId}`, JSON.stringify(list));
+}
+function getClassById(classId) {
+  const list = readClasses();
+  return list.find(c => c.id == classId) || null;
+}
+
+// -----------------------------
+// class.html module (create/list classes)
+// -----------------------------
+(function classPageModule() {
+  if (!window.location.pathname.endsWith("class.html")) return;
+
+  let classesList = readClasses();
+
+  function renderClasses() {
+    const container = document.getElementById("availableclass");
+    if (!container) return;
+    container.innerHTML = "";
+    if (classesList.length === 0) {
+      container.innerHTML = `<p class="no-class">No classes created yet.</p>`;
+      return;
+    }
+    classesList.forEach((c, i) => {
+      const btn = document.createElement("button");
+      btn.className = "classes";
+      btn.onclick = () => window.location.href = `class-details.html?classId=${c.id}`;
+      btn.innerHTML = `
+        <div class="text">
+          <h1>${c.name}</h1>
+          <p>${c.semester}</p>
+        </div>
+        <button class="delete-btn" onclick="event.stopPropagation(); removeClass(${i})">
+          <img src="image/trash.png" alt="Remove Class" class="delete-icon">
+        </button>
+      `;
+      container.appendChild(btn);
+    });
   }
-});
 
+  window.addClass = function() {
+    const nameInput = document.getElementById("addedClass");
+    const semesterSelect = document.getElementById("semester-select");
+    const className = nameInput?.value.trim();
+    const semester = semesterSelect?.value;
+    if (!className) return alert("Please enter a class name.");
+    if (!semester) return alert("Please select a semester.");
+    const newClass = { id: Date.now(), name: className, semester };
+    classesList.push(newClass);
+    writeClasses(classesList);
+    nameInput.value = "";
+    semesterSelect.value = "";
+    renderClasses();
+  };
 
-// Store the list of classes in localStorage
-let classesList = JSON.parse(localStorage.getItem('classesList')) || [];
+  window.removeClass = function(index) {
+    if (!confirm("Remove this class and all its student data?")) return;
+    const c = classesList[index];
+    if (c?.id) {
+      // remove related data keys (students etc.)
+      localStorage.removeItem(`studentsList_${c.id}`);
+      localStorage.removeItem(`scoresList_${c.id}`);
+      localStorage.removeItem(`gradesList_${c.id}`);
+      localStorage.removeItem(`attendanceList_${c.id}`);
+    }
+    classesList.splice(index, 1);
+    writeClasses(classesList);
+    renderClasses();
+  };
 
-// Function to add a NEW CLASS
-function addClass() {
-  const nameInput = document.getElementById('addedClass');
-  const semesterSelect = document.getElementById('semester-select'); // Use the new ID
-  
-  const className = nameInput.value.trim();
-  const semester = semesterSelect.value;
-  
-  if (!className) return alert('Please enter a class name.');
-  if (!semester) return alert('Please select a semester.');
-
-  classesList.push({ 
-    name: className, 
-    semester: semester,
-  });
-  
-  localStorage.setItem('classesList', JSON.stringify(classesList));
-  
-  // Clear inputs
-  nameInput.value = '';
-  semesterSelect.value = ''; 
-  
   renderClasses();
-}
+})();
 
-// Function to remove a CLASS
-function removeClass(index) {
-  if (!confirm('Remove this class and all its student data?')) return;
-  
-  classesList.splice(index, 1);
-  localStorage.setItem('classesList', JSON.stringify(classesList));
-  
-  renderClasses();
-}
+// -----------------------------
+// class-details.html module (cards + optional students preview)
+// -----------------------------
+(function classDetailsModule() {
+  if (!window.location.pathname.endsWith("class-details.html")) return;
 
-// Function to render the list of available classes
-function renderClasses() {
-  const listContainer = document.getElementById('availableclass');
-  if (!listContainer) return;
-
-  listContainer.innerHTML = '';
-
-  classesList.forEach((c, i) => {
-    const button = document.createElement('button');
-    button.classList.add('classes');
-
-    button.onclick = () => {
-      window.location.href = `class-details.html?classIndex=${i}`;
-    };
-
-    button.innerHTML = `
-      <div class="text">
-        <h1>${c.name}</h1>
-        <p>${c.semester}</p>
-      </div>
-
-      <button class="delete-btn" onclick="event.stopPropagation(); removeClass(${i})">
-        <img src="image/trash.png" alt="Remove Class" class="delete-icon">
-      </button>
-    `;
-
-    listContainer.appendChild(button);
-  });
-}
-
-window.addEventListener('pageshow', function (event) {
-  if (event.persisted) {
-    classesList = JSON.parse(localStorage.getItem('classesList')) || [];
-  }
-  renderClasses();
-});
-
-
-
-
-
-
-let studentsList = JSON.parse(localStorage.getItem("studentsList")) || [];
-
-function saveToLocalStorage() {
-  localStorage.setItem("studentsList", JSON.stringify(studentsList));
-}
-
-function renderStudents() {
-  const tableBody = document.getElementById("tableBody");
-  tableBody.innerHTML = "";
-
-  studentsList.forEach((student, index) => {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${student.name}</td>
-      <td><input type="number" class="quarter first" step="0.25" min="1" max="5" value="${student.q1}" oninput="updateStudent(${index}, 'q1', this.value)" /></td>
-      <td><input type="number" class="quarter second" step="0.25" min="1" max="5" value="${student.q2}" oninput="updateStudent(${index}, 'q2', this.value)" /></td>
-      <td><input type="number" class="quarter third" step="0.25" min="1" max="5" value="${student.q3}" oninput="updateStudent(${index}, 'q3', this.value)" /></td>
-      <td><input type="number" class="quarter fourth" step="0.25" min="1" max="5" value="${student.q4}" oninput="updateStudent(${index}, 'q4', this.value)" /></td>
-      <td class="final-grade">${student.finalGrade || "0.00"}</td>
-      <td class="remark" style="color:${student.remark === "Failed" ? "#d63031" : "#00b894"}">${student.remark || "N/A"}</td>
-      <td>
-        <button class="btn-edit" onclick="editStudent(${index})">Edit</button>
-        <button class="btn-delete" onclick="deleteStudent(${index})">Delete</button>
-      </td>
-    `;
-    tableBody.appendChild(row);
-  });
-}
-
-function addStudent() {
-  const nameInput = document.getElementById("studentNameInput");
-  const name = nameInput.value.trim();
-
-  if (name === "") {
-    alert("Please enter a student's name.");
+  const classId = getClassIdFromURL();
+  const currentClass = getClassById(classId);
+  if (!currentClass) {
+    alert("No class selected. Returning to class list.");
+    window.location.href = "class.html";
     return;
   }
 
-  studentsList.push({
-    name,
-    q1: "",
-    q2: "",
-    q3: "",
-    q4: "",
-    finalGrade: "0.00",
-    remark: "N/A"
+  // update header title
+  const subjectEl = document.querySelector(".subjectname");
+  if (subjectEl) subjectEl.textContent = `${currentClass.name} - ${currentClass.semester}`;
+
+  // wire up card buttons (if present)
+  const btnMap = [
+    { id: "addStudentsBtn", page: "add-students.html" },
+    { id: "addScoresBtn", page: "add-score.html" },
+    { id: "addGradesBtn", page: "add-grade.html" },
+    { id: "addAttendanceBtn", page: "add-attendance.html" }
+  ];
+  btnMap.forEach(({id, page}) => {
+    const btn = document.getElementById(id);
+    if (btn) btn.onclick = () => window.location.href = `${page}?classId=${classId}`;
   });
 
-  saveToLocalStorage();
-  renderStudents();
-  nameInput.value = "";
-}
-
-function updateStudent(index, quarter, value) {
-  studentsList[index][quarter] = value;
-  calculateCollegeGrade(index);
-  saveToLocalStorage();
-  renderStudents();
-}
-
-// College grading based on 1.00 to 5.00 system (lower is better)
-function calculateCollegeGrade(index) {
-  const s = studentsList[index];
-  const q1 = parseFloat(s.q1) || 0;
-  const q2 = parseFloat(s.q2) || 0;
-  const q3 = parseFloat(s.q3) || 0;
-  const q4 = parseFloat(s.q4) || 0;
-
-  const average = (q1 + q2 + q3 + q4) / 4;
-
-  s.finalGrade = average.toFixed(2);
-  s.remark = getRemark(average);
-}
-
-// College grading remarks
-function getRemark(average) {
-  if (average <= 1.25) return "Passing";
-  if (average <= 1.75) return "Passing";
-  if (average <= 2.25) return "Passing";
-  if (average <= 2.75) return "Passing";
-  if (average <= 3.00) return "Passing";
-  return "Failed";
-}
-
-function editStudent(index) {
-  const newName = prompt("Edit Student Name:", studentsList[index].name);
-  if (newName && newName.trim() !== "") {
-    studentsList[index].name = newName.trim();
-    saveToLocalStorage();
+  // If this page contains a students table (optional), render it
+  const tableBody = document.getElementById("tableBody");
+  if (tableBody) {
+    let students = loadStudentsFor(classId);
+    function renderStudents() {
+      tableBody.innerHTML = "";
+      if (students.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="2" style="text-align:center;">No students added yet.</td></tr>`;
+        return;
+      }
+      students.forEach((s, i) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${s.name}</td>
+          <td>
+            <button class="btn-edit" onclick="editStudentFromDetails(${i})">Edit</button>
+            <button class="btn-delete" onclick="deleteStudentFromDetails(${i})">Delete</button>
+          </td>
+        `;
+        tableBody.appendChild(tr);
+      });
+    }
+    window.editStudentFromDetails = function(index) {
+      const studentsList = loadStudentsFor(classId);
+      const newName = prompt("Edit Student Name:", studentsList[index]?.name || "");
+      if (newName && newName.trim() !== "") {
+        studentsList[index].name = newName.trim();
+        saveStudentsFor(classId, studentsList);
+        renderStudents();
+      }
+    };
+    window.deleteStudentFromDetails = function(index) {
+      if (!confirm("Delete this student?")) return;
+      const studentsList = loadStudentsFor(classId);
+      studentsList.splice(index, 1);
+      saveStudentsFor(classId, studentsList);
+      renderStudents();
+    };
     renderStudents();
   }
-}
+})();
 
-function deleteStudent(index) {
-  if (confirm("Are you sure you want to delete this student?")) {
-    studentsList.splice(index, 1);
-    saveToLocalStorage();
-    renderStudents();
+// -----------------------------
+// add-students.html module
+// -----------------------------
+(function addStudentsModule() {
+  if (!window.location.pathname.endsWith("add-students.html")) return;
+
+  const classId = getClassIdFromURL();
+  const currentClass = getClassById(classId);
+  if (!currentClass) {
+    alert("No class selected. Returning to class list.");
+    window.location.href = "class.html";
+    return;
   }
-}
 
-window.addEventListener("DOMContentLoaded", renderStudents);
+  // update header
+  const subjectEl = document.querySelector(".subjectname");
+  if (subjectEl) subjectEl.textContent = `${currentClass.name} - ${currentClass.semester}`;
+
+  // students list
+  let students = loadStudentsFor(classId);
+
+  const tableBody = document.getElementById("tableBody");
+  function render() {
+    if (!tableBody) return;
+    tableBody.innerHTML = "";
+    if (students.length === 0) {
+      tableBody.innerHTML = `<tr><td colspan="2" style="text-align:center;">No students added yet.</td></tr>`;
+      return;
+    }
+    students.forEach((s, idx) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${s.name}</td>
+        <td>
+          <button class="btn-edit" onclick="editStudent(${idx})">Edit</button>
+          <button class="btn-delete" onclick="deleteStudent(${idx})">Delete</button>
+        </td>
+      `;
+      tableBody.appendChild(tr);
+    });
+  }
+
+  // expose functions used by HTML buttons (global, because HTML inline calls them)
+  window.addStudent = function() {
+    const nameInput = document.getElementById("studentNameInput");
+    if (!nameInput) return;
+    const name = nameInput.value.trim();
+    if (!name) return alert("Please enter a student's name.");
+    students.push({
+      id: Date.now(),
+      name,
+      scores: { quiz: "", exam: "", project: "" },
+      grades: { final: "" },
+      attendance: []
+    });
+    saveStudentsFor(classId, students);
+    nameInput.value = "";
+    render();
+  };
+
+  window.editStudent = function(index) {
+    const newName = prompt("Edit Student Name:", students[index]?.name || "");
+    if (newName && newName.trim() !== "") {
+      students[index].name = newName.trim();
+      saveStudentsFor(classId, students);
+      render();
+    }
+  };
+
+  window.deleteStudent = function(index) {
+    if (!confirm("Delete this student?")) return;
+    students.splice(index, 1);
+    saveStudentsFor(classId, students);
+    render();
+  };
+
+  // auto-save on leave
+  window.addEventListener("beforeunload", () => saveStudentsFor(classId, students));
+
+  render();
+})();
+
+// -----------------------------
+// add-score.html module
+// -----------------------------
+(function addScoresModule() {
+  if (!window.location.pathname.endsWith("add-score.html")) return;
+
+  const classId = getClassIdFromURL();
+  const currentClass = getClassById(classId);
+  if (!currentClass) {
+    alert("No class selected. Returning to class list.");
+    window.location.href = "class.html";
+    return;
+  }
+
+  const subjectEl = document.querySelector(".subjectname");
+  if (subjectEl) subjectEl.textContent = `${currentClass.name} - ${currentClass.semester}`;
+
+  let students = loadStudentsFor(classId);
+  const tableBody = document.getElementById("tableBody");
+
+  function render() {
+    if (!tableBody) return;
+    tableBody.innerHTML = "";
+    if (students.length === 0) {
+      tableBody.innerHTML = `<tr><td colspan="5">No students added yet.</td></tr>`;
+      return;
+    }
+    students.forEach((s) => {
+      if (!s.scores) s.scores = { quiz: "", exam: "", project: "" };
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${s.name}</td>
+        <td><input type="number" min="0" max="100" value="${s.scores.quiz}" class="score-input" data-type="quiz" data-id="${s.id}"></td>
+        <td><input type="number" min="0" max="100" value="${s.scores.exam}" class="score-input" data-type="exam" data-id="${s.id}"></td>
+        <td><input type="number" min="0" max="100" value="${s.scores.project}" class="score-input" data-type="project" data-id="${s.id}"></td>
+        <td><button class="btn-clear" data-id="${s.id}">Clear</button></td>
+      `;
+      tableBody.appendChild(tr);
+    });
+  }
+
+  // input handler (delegated)
+  document.addEventListener("input", (e) => {
+    if (!e.target.classList.contains("score-input")) return;
+    const id = Number(e.target.dataset.id);
+    const type = e.target.dataset.type;
+    const value = e.target.value;
+    const student = students.find(x => x.id === id);
+    if (!student) return;
+    student.scores = student.scores || { quiz: "", exam: "", project: "" };
+    student.scores[type] = value;
+    saveStudentsFor(classId, students);
+  });
+
+  // clear handler
+  document.addEventListener("click", (e) => {
+    if (!e.target.matches(".btn-clear")) return;
+    const id = Number(e.target.dataset.id);
+    if (!confirm("Clear scores for this student?")) return;
+    const student = students.find(x => x.id === id);
+    if (!student) return;
+    student.scores = { quiz: "", exam: "", project: "" };
+    saveStudentsFor(classId, students);
+    render();
+  });
+
+  // auto-save on leave
+  window.addEventListener("beforeunload", () => saveStudentsFor(classId, students));
+
+  render();
+})();
+
+// -----------------------------
+// add-grade.html module (auto compute / store final grade)
+// -----------------------------
+(function addGradesModule() {
+  if (!window.location.pathname.endsWith("add-grade.html")) return;
+
+  const classId = getClassIdFromURL();
+  const currentClass = getClassById(classId);
+  if (!currentClass) {
+    alert("No class selected. Returning to class list.");
+    window.location.href = "class.html";
+    return;
+  }
+
+  const subjectEl = document.querySelector(".subjectname");
+  if (subjectEl) subjectEl.textContent = `${currentClass.name} - ${currentClass.semester}`;
+
+  let students = loadStudentsFor(classId);
+  const tableBody = document.getElementById("tableBody");
+
+  function computeFinal(prelim, midterm, finals) {
+    // simple average; change weighting if you need
+    const p = Number(prelim) || 0;
+    const m = Number(midterm) || 0;
+    const f = Number(finals) || 0;
+    return Math.round(((p + m + f) / 3) * 100) / 100;
+  }
+
+  function render() {
+    if (!tableBody) return;
+    tableBody.innerHTML = "";
+    if (students.length === 0) {
+      tableBody.innerHTML = `<tr><td colspan="6">No students added yet.</td></tr>`;
+      return;
+    }
+    students.forEach(s => {
+      s.grades = s.grades || { prelim: "", midterm: "", finals: "", finalGrade: "", remark: "" };
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${s.name}</td>
+        <td><input type="number" min="0" max="100" value="${s.grades.prelim}" class="grade-input" data-field="prelim" data-id="${s.id}"></td>
+        <td><input type="number" min="0" max="100" value="${s.grades.midterm}" class="grade-input" data-field="midterm" data-id="${s.id}"></td>
+        <td><input type="number" min="0" max="100" value="${s.grades.finals}" class="grade-input" data-field="finals" data-id="${s.id}"></td>
+        <td class="final-grade-cell">${s.grades.finalGrade || ""}</td>
+        <td class="remark-cell">${s.grades.remark || ""}</td>
+      `;
+      tableBody.appendChild(tr);
+    });
+  }
+
+  // delegated input handler: update prelim/midterm/finals and compute final + remark
+  document.addEventListener("input", (e) => {
+    if (!e.target.classList.contains("grade-input")) return;
+    const id = Number(e.target.dataset.id);
+    const field = e.target.dataset.field;
+    const val = e.target.value;
+    const student = students.find(x => x.id === id);
+    if (!student) return;
+    student.grades = student.grades || {};
+    student.grades[field] = val;
+    // compute final
+    const final = computeFinal(student.grades.prelim, student.grades.midterm, student.grades.finals);
+    student.grades.finalGrade = final;
+    student.grades.remark = final >= 75 ? "Passed" : "Failed"; // adjust pass threshold if needed
+    saveStudentsFor(classId, students);
+    // update cells visually (fast)
+    // find the row and update final & remark
+    const row = [...document.querySelectorAll("#tableBody tr")].find(r => r.querySelector(`.grade-input[data-id='${id}']`));
+    if (row) {
+      const finalCell = row.querySelector(".final-grade-cell");
+      const remarkCell = row.querySelector(".remark-cell");
+      if (finalCell) finalCell.textContent = student.grades.finalGrade;
+      if (remarkCell) remarkCell.textContent = student.grades.remark;
+    }
+  });
+
+  window.addEventListener("beforeunload", () => saveStudentsFor(classId, students));
+
+  render();
+})();
+
+// -----------------------------
+// add-attendance.html module (Option B: only today's attendance matters)
+// -----------------------------
+(function addAttendanceModule() {
+  if (!window.location.pathname.endsWith("add-attendance.html")) return;
+
+  const classId = getClassIdFromURL();
+  const currentClass = getClassById(classId);
+  if (!currentClass) {
+    alert("No class selected. Returning to class list.");
+    window.location.href = "class.html";
+    return;
+  }
+
+  const subjectEl = document.querySelector(".subjectname");
+  if (subjectEl) subjectEl.textContent = `${currentClass.name} - ${currentClass.semester}`;
+
+  let students = loadStudentsFor(classId);
+  const tableBody = document.getElementById("tableBody");
+
+  // We'll store only today's status key inside each student as `attendanceToday: "present"|"absent"`
+  const todayKey = new Date().toLocaleDateString();
+
+  function render() {
+    if (!tableBody) return;
+    tableBody.innerHTML = "";
+    if (students.length === 0) {
+      tableBody.innerHTML = `<tr><td colspan="3">No students added yet.</td></tr>`;
+      return;
+    }
+    students.forEach(s => {
+      // ensure attendance array exists (keeps history if you want)
+      s.attendance = s.attendance || [];
+      const lastStatus = s.attendance.length ? s.attendance.at(-1) : "";
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${s.name}</td>
+        <td>${todayKey}</td>
+        <td>
+          <select class="attendance-select" data-id="${s.id}">
+            <option value="present" ${lastStatus === "present" ? "selected" : ""}>Present</option>
+            <option value="absent" ${lastStatus === "absent" ? "selected" : ""}>Absent</option>
+          </select>
+        </td>
+      `;
+      tableBody.appendChild(tr);
+    });
+  }
+
+  document.addEventListener("change", (e) => {
+    if (!e.target.classList.contains("attendance-select")) return;
+    const id = Number(e.target.dataset.id);
+    const val = e.target.value; // "present" or "absent"
+    const student = students.find(x => x.id === id);
+    if (!student) return;
+    // Option B: only today's attendance matters — overwrite last entry
+    if (!student.attendance) student.attendance = [];
+    // remove last entry if it's same date? we store only status strings, but to keep consistent:
+    // We'll store attendance as array of {date, status}
+    const dateStatus = { date: todayKey, status: val };
+    // if last entry date === today -> replace
+    if (student.attendance.length && student.attendance.at(-1).date === todayKey) {
+      student.attendance[student.attendance.length - 1] = dateStatus;
+    } else {
+      student.attendance.push(dateStatus);
+    }
+    saveStudentsFor(classId, students);
+  });
+
+  window.addEventListener("beforeunload", () => saveStudentsFor(classId, students));
+
+  render();
+})();
