@@ -1,51 +1,203 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Class Record</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="Login-Style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="Login-Style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      background-color: #121212;
+      font-family: 'Poppins', sans-serif;
+      color: white;
+      margin: 0;
+    }
+
+    .dashboard-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2rem;
+      padding: 0 1rem;
+    }
+
+    .dash-card {
+      border-radius: 20px;
+      padding: 1.5rem;
+      text-align: center;
+      transition: 0.3s ease;
+      background-color: #1b1b1b;
+      border: 2px solid #00b894;
+    }
+
+    .dash-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 0 15px rgba(0, 184, 148, 0.4);
+    }
+
+    .dash-card h2 {
+      font-size: 2.4rem;
+      margin: 0.5rem 0;
+      color: white;
+    }
+
+    .dash-card p {
+      font-size: 1rem;
+      color: white;
+    }
+
+    .chart-section {
+      border-radius: 20px;
+      padding: 2rem;
+      margin: 2rem 1rem;
+      width: calc(100% - 2rem);
+      background-color: #1b1b1b;
+      border: 2px solid #00b894;
+      box-shadow: 0 0 15px rgba(0, 184, 148, 0.3);
+    }
+
+    .chart-section h3 {
+      text-align: left;
+      margin-bottom: 1rem;
+      color: white;
+      font-weight: 600;
+      padding-left: 0.5rem;
+    }
+
+    canvas {
+      width: 100% !important;
+      height: 380px !important;
+    }
+
+    .main-content {
+      margin-left: 240px;
+      padding: 1rem 2rem;
+    }
+
+    @media (max-width: 900px) {
+      .main-content {
+        margin-left: 0;
+        padding: 1rem;
+      }
+    }
+  </style>
 </head>
 <body>
-    
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <h2>DASHBOARD</h2>
-        <ul>
-            <li><a href="dashboard.html"><img src="image/home.png" alt="">   Dashboard</a></li>
-            <li><a href="class.html"><img src="image/books.png" alt="">   Class</a></li>
-        </ul>
-        
-    </div>
-    
-    <header class="index-header">
-        <button class="open-btn">☰</button>
-        <h3 class="open-h3">DASHBOARD</h3>
-        <div class="user">
-            <button><img src="image/user.png" alt=""></button>
-            <div>
-                <ul>
-                    <li>
-                        <a href="">Profile</a>
-                        <a href="index.html" class="logout">Log out</a>
-                    </li>
-                </ul>
-            </div>  
-        </div>
-    </header>
-        
-    <!-- Toggle button for mobile -->
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h2>DASHBOARD</h2>
+    <ul>
+      <li><a href=""><img src="image/user.png" alt=""> Profile</a></li>
+      <li><a href="dashboard.html"><img src="image/home.png" alt=""> Dashboard</a></li>
+      <li><a href="class.html"><img src="image/books.png" alt=""> Class</a></li>
+    </ul>
+  </div>
 
-    <!-- Main content -->
-    <div class="main-content">
-        <h1>Welcome</h1>
-        <p>This is your class record system. You can manage and view your data here. 
-        On desktop, the sidebar is always visible, while on mobile, you can toggle it with the ☰ button.</p>
+  <!-- Header -->
+  <header class="index-header">
+    <button class="open-btn">☰</button>
+    <h3 class="open-h3">DASHBOARD</h3>
+    <div class="user">
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </header>
+
+  <!-- Main content -->
+  <div class="main-content">
+    <div class="dashboard-container">
+      <div class="dash-card">
+        <h2 id="totalClasses">0</h2>
+        <p>Total Classes</p>
+      </div>
+      <div class="dash-card">
+        <h2 id="totalStudents">0</h2>
+        <p>Total Students</p>
+      </div>
+      <div class="dash-card">
+        <h2 id="totalAttendance">0</h2>
+        <p>Total Attendance Days</p>
+      </div>
     </div>
 
-    <script src="Login-script.js"></script>
+    <div class="chart-section">
+      <h3>Attendance Overview</h3>
+      <canvas id="attendanceChart"></canvas>
+    </div>
+  </div>
+
+  <script src="Login-script.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const user = localStorage.getItem("loggedInUser");
+      if (!user) { window.location.href = "index.html"; return; }
+
+      const classes = JSON.parse(localStorage.getItem("classesList_" + user)) || [];
+      let totalStudents = 0, presentCount = 0, absentCount = 0, totalAttendanceDays = 0;
+
+      classes.forEach(cls => {
+        const students = JSON.parse(localStorage.getItem("studentsList_" + user + "_" + cls.id)) || [];
+        totalStudents += students.length;
+        students.forEach(s => {
+          if (Array.isArray(s.attendance)) {
+            totalAttendanceDays += s.attendance.length;
+            presentCount += s.attendance.filter(a => a.status === "Present").length;
+            absentCount += s.attendance.filter(a => a.status === "Absent").length;
+          }
+        });
+      });
+
+      document.getElementById("totalClasses").textContent = classes.length;
+      document.getElementById("totalStudents").textContent = totalStudents;
+      document.getElementById("totalAttendance").textContent = totalAttendanceDays;
+
+      const ctx = document.getElementById("attendanceChart").getContext("2d");
+
+      const gradientPresent = ctx.createLinearGradient(0, 0, 0, 400);
+      gradientPresent.addColorStop(0, 'rgba(0, 184, 148, 0.4)');
+      gradientPresent.addColorStop(1, 'rgba(0, 184, 148, 0)');
+
+      const gradientAbsent = ctx.createLinearGradient(0, 0, 0, 400);
+      gradientAbsent.addColorStop(0, 'rgba(229, 57, 53, 0.4)');
+      gradientAbsent.addColorStop(1, 'rgba(229, 57, 53, 0)');
+
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+          datasets: [
+            {
+              label: 'Present',
+              data: [presentCount / 5, presentCount / 4, presentCount / 3, presentCount / 2, presentCount],
+              fill: true,
+              backgroundColor: gradientPresent,
+              borderColor: '#00b894',
+              tension: 0.4,
+              borderWidth: 2
+            },
+            {
+              label: 'Absent',
+              data: [absentCount / 4, absentCount / 3, absentCount / 2, absentCount, absentCount / 1.5],
+              fill: true,
+              backgroundColor: gradientAbsent,
+              borderColor: '#E53935',
+              tension: 0.4,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          interaction: { mode: 'index', intersect: false },
+          plugins: { legend: { position: 'bottom', labels: { color: '#fff' } } },
+          scales: {
+            x: { grid: { color: '#333' }, ticks: { color: '#fff' } },
+            y: { beginAtZero: true, ticks: { stepSize: 2, color: '#fff' }, grid: { color: '#333' } }
+          }
+        }
+      });
+    });
+  </script>
 </body>
 </html>

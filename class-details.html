@@ -1,37 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>RECON Dashboard</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="Login-Style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RECON Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="Login-Style.css" />
 </head>
+<header class="index-header">
+  <button class="open-btn">☰</button>
+  <h3 class="open-h3">DASHBOARD</h3>
+  <div class="user">
+      <button class="logout-btn">Logout</button>
+  </div>
+</header>
+    
 <body>
   <!-- Sidebar -->
-  <aside class="sidebar">
-    <h2>RECON</h2>
+  <div class="sidebar">
+    <h2>DASHBOARD</h2>
     <ul>
-      <li><a href="#" class="active">Dashboard</a></li>
-      <li><a href="#">Classes</a></li>
-      <li><a href="#">Reports</a></li>
+      <li><a href=""><img src="image/user.png" alt=""> Profile</a></li>
+      <li><a href="dashboard.html"><img src="image/home.png" alt=""> Dashboard</a></li>
+      <li><a href="class.html"><img src="image/books.png" alt=""> Class</a></li>
     </ul>
-  </aside>
+  </div>
 
   <!-- Header -->
   <header class="index-header">
-    <button class="open-btn">&#9776;</button>
-    <h3 class="subjectname">BSIT - 1</h3>
+    <button class="open-btn">☰</button>
+    <h3 class="open-h3">DASHBOARD</h3>
     <div class="user">
-      <button>Profile</button>
-      <div>
-        <ul>
-          <li><a href="#">Settings</a></li>
-          <li><a href="#">Logout</a></li>
-        </ul>
-      </div>
+      <button class="logout-btn" onclick="logout()">Logout</button>
     </div>
   </header>
 
@@ -41,36 +43,31 @@
     <section class="dashboard-section">
       <h1>Class Management</h1>
       <div class="cards-container">
+        <!-- Add Students -->
         <button class="card-btn" id="addStudentsBtn">
-            <div class="card">
-                <img src="https://via.placeholder.com/120" alt="Add Students" />
-                <h2>Add Students</h2>
-                <p>Register new students into this class.</p>
-            </div>
+          <div class="card">
+            <img src="https://via.placeholder.com/120" alt="Add Students" />
+            <h2>Add Students</h2>
+            <p>Register new students into this class.</p>
+          </div>
         </button>
 
-        <button class="card-btn" id="addScoresBtn">
-            <div class="card">
-                <img src="https://via.placeholder.com/120" alt="Score Management" />
-                <h2>Score Management</h2>
-                <p>Record and update quiz and exam scores.</p>
-            </div>
-        </button>
-
+        <!-- Add Grades -->
         <button class="card-btn" id="addGradesBtn">
-            <div class="card">
-                <img src="https://via.placeholder.com/120" alt="Grades" />
-                <h2>Grades</h2>
-                <p>Compute final grades and remarks automatically.</p>
-            </div>
+          <div class="card">
+            <img src="https://via.placeholder.com/120" alt="Grades" />
+            <h2>Grades</h2>
+            <p>Compute final grades and remarks automatically.</p>
+          </div>
         </button>
 
+        <!-- Add Attendance -->
         <button class="card-btn" id="addAttendanceBtn">
-            <div class="card">
-                <img src="https://via.placeholder.com/120" alt="Attendance" />
-                <h2>Attendance</h2>
-                <p>Monitor and track class attendance records.</p>
-            </div>
+          <div class="card">
+            <img src="https://via.placeholder.com/120" alt="Attendance" />
+            <h2>Attendance</h2>
+            <p>Monitor and track class attendance records.</p>
+          </div>
         </button>
       </div>
     </section>
@@ -86,17 +83,15 @@
       window.location.href = "class.html";
     }
 
-    // ✅ Automatically add classId to all 4 card buttons
+    // ✅ Automatically add classId to all 3 card buttons
     document.getElementById("addStudentsBtn").onclick = () =>
       window.location.href = `add-students.html?classId=${classId}`;
-    document.getElementById("addScoresBtn").onclick = () =>
-      window.location.href = `add-scores.html?classId=${classId}`;
     document.getElementById("addGradesBtn").onclick = () =>
       window.location.href = `add-grades.html?classId=${classId}`;
     document.getElementById("addAttendanceBtn").onclick = () =>
       window.location.href = `add-attendances.html?classId=${classId}`;
   </script>
 
-  <script src="script.js"></script>
+  <script src="Login-script.js"></script>
 </body>
 </html>

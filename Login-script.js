@@ -1,19 +1,64 @@
 // =============================
-// Login-script.js (final, stable)
+// Login-script.js — Unified, User-specific
 // =============================
+
+// -----------------------------
+// UTILITIES & STORAGE HELPERS (user-specific)
+// -----------------------------
+function currentUser() {
+  return localStorage.getItem("loggedInUser") || null;
+}
+
+function readClasses() {
+  const user = currentUser() || "guest";
+  try { return JSON.parse(localStorage.getItem(`classesList_${user}`)) || []; }
+  catch { return []; }
+}
+function writeClasses(list) {
+  const user = currentUser() || "guest";
+  localStorage.setItem(`classesList_${user}`, JSON.stringify(list));
+}
+
+function getClassIdFromURL() {
+  return new URLSearchParams(window.location.search).get("classId");
+}
+
+function loadStudentsFor(classId) {
+  const user = currentUser() || "guest";
+  if (!classId) return [];
+  try { return JSON.parse(localStorage.getItem(`studentsList_${user}_${classId}`)) || []; }
+  catch { return []; }
+}
+function saveStudentsFor(classId, list) {
+  const user = currentUser() || "guest";
+  if (!classId) return;
+  localStorage.setItem(`studentsList_${user}_${classId}`, JSON.stringify(list));
+}
+
+function getClassById(classId) {
+  const list = readClasses();
+  return list.find(c => String(c.id) === String(classId)) || null;
+}
+
+function isLoggedIn() {
+  return !!localStorage.getItem('loggedInUser');
+}
+
+function pathEndsWith(name) {
+  return window.location.pathname.split('/').pop() === name;
+}
 
 // -----------------------------
 // SIDEBAR TOGGLE (shared)
 // -----------------------------
-const openBtn = document.querySelector(".open-btn");
-const sidebar = document.querySelector(".sidebar");
-
-if (openBtn && sidebar) {
+(function setupSidebarToggle() {
+  const openBtn = document.querySelector(".open-btn");
+  const sidebar = document.querySelector(".sidebar");
+  if (!openBtn || !sidebar) return;
   openBtn.addEventListener("click", () => {
     sidebar.classList.toggle("active");
     openBtn.classList.toggle("hidden");
   });
-
   document.addEventListener("click", (e) => {
     if (window.innerWidth <= 768 && sidebar.classList.contains("active")) {
       if (!sidebar.contains(e.target) && !openBtn.contains(e.target)) {
@@ -22,60 +67,182 @@ if (openBtn && sidebar) {
       }
     }
   });
-}
+})();
 
 // -----------------------------
-// STORAGE HELPERS (shared)
+// AUTH: LOGIN / SIGNUP / LOGOUT
 // -----------------------------
-function readClasses() {
-  return JSON.parse(localStorage.getItem("classesList")) || [];
-}
-function writeClasses(list) {
-  localStorage.setItem("classesList", JSON.stringify(list));
-}
-function getClassIdFromURL() {
-  return new URLSearchParams(window.location.search).get("classId");
-}
-function studentsKey(classId) {
-  return `studentsList_${classId}`;
-}
-function loadStudentsFor(classId) {
-  if (!classId) return [];
-  return JSON.parse(localStorage.getItem(studentsKey(classId))) || [];
-}
-function saveStudentsFor(classId, list) {
-  if (!classId) return;
-  localStorage.setItem(studentsKey(classId), JSON.stringify(list));
-}
-function getClassById(classId) {
-  const list = readClasses();
-  return list.find(c => c.id == classId) || null;
-}
+(function loginModule() {
+  const loginForm = document.getElementById("loginForm");
+  const usernameInput = document.getElementById("username");
+  const passwordInput = document.getElementById("password");
+  const msgEl = document.getElementById("msg");
+
+  const builtinAdmin = { username: "admin", password: "admin" };
+
+  function showMsg(el, text, type = "error") {
+    if (!el) return;
+    el.textContent = text;
+    el.className = "msg " + (type === "success" ? "success" : "error");
+    el.style.display = "block";
+  }
+
+  function loadUsers() {
+    try {
+      const raw = localStorage.getItem("users");
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  // LOGIN PAGE BEHAVIOR
+  if (loginForm) {
+    // Always clear any old login session when visiting login page
+    localStorage.removeItem("loggedInUser");
+
+    loginForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value.trim();
+
+      if (!username || !password) {
+        showMsg(msgEl, "Please enter both username and password.");
+        return;
+      }
+
+      // Built-in Admin login
+      if (username === builtinAdmin.username && password === builtinAdmin.password) {
+        localStorage.setItem("loggedInUser", username);
+        showMsg(msgEl, "Welcome admin — redirecting...", "success");
+        setTimeout(() => (window.location.href = "dashboard.html"), 400);
+        return;
+      }
+
+      // Regular user login
+      const users = loadUsers();
+      const found = users.find(
+        (u) => u.username === username && u.password === password
+      );
+
+      if (found) {
+        localStorage.setItem("loggedInUser", username);
+        showMsg(msgEl, "Login successful — redirecting...", "success");
+        setTimeout(() => (window.location.href = "dashboard.html"), 400);
+      } else {
+        showMsg(msgEl, "Invalid username or password.");
+      }
+    });
+  }
+
+  // SIGNUP PAGE BEHAVIOR
+  const signupForm = document.getElementById("signupForm");
+  if (signupForm) {
+    signupForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const fullName = (document.getElementById("fullName") || {}).value || "";
+      const email = (document.getElementById("email") || {}).value || "";
+      const username = (document.getElementById("username") || {}).value || "";
+      const password = (document.getElementById("password") || {}).value || "";
+
+      if (!fullName.trim() || !email.trim() || !username.trim() || !password) {
+        showMsg(msgEl, "All fields are required.", "error");
+        return;
+      }
+
+      let users = [];
+      try {
+        users = JSON.parse(localStorage.getItem("users")) || [];
+      } catch {}
+
+      if (users.some((u) => u.username === username)) {
+        showMsg(msgEl, "Username already exists.", "error");
+        return;
+      }
+
+      users.push({
+        fullName: fullName.trim(),
+        email: email.trim(),
+        username: username.trim(),
+        password,
+      });
+
+      localStorage.setItem("users", JSON.stringify(users));
+      showMsg(msgEl, "Account created. Redirecting to Sign In...", "success");
+      setTimeout(() => (window.location.href = "signin.html"), 700);
+    });
+  }
+
+  // LOGOUT FUNCTION — can be used by logout button anywhere
+  window.logout = function () {
+    localStorage.removeItem("loggedInUser");
+    window.location.href = "index.html";
+  };
+})();
+
 
 // -----------------------------
-// class.html module (create/list classes)
+// GLOBAL LOGOUT CLICK HANDLER (applies to all pages)
+// -----------------------------
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".logout").forEach(link => {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      // optional confirm
+      if (confirm("Are you sure you want to log out?")) {
+        localStorage.removeItem("loggedInUser");
+        window.location.href = "index.html";
+      }
+    });
+  });
+
+
+});
+
+// -----------------------------
+// SESSION GUARD FOR PROTECTED PAGES
+// -----------------------------
+(function sessionGuard() {
+  const protectedPages = [
+    "dashboard.html",
+    "class.html",
+    "class-details.html",
+    "add-students.html",
+    "add-scores.html",
+    "add-grades.html",
+    "add-attendances.html",
+    "add-attendance.html" // in case different file names
+  ];
+  const cur = window.location.pathname.split("/").pop();
+  if (protectedPages.includes(cur) && !isLoggedIn()) {
+    window.location.href = "index.html";
+  }
+})();
+
+// -----------------------------
+// CLASS PAGE (class.html) — create / list / delete
 // -----------------------------
 (function classPageModule() {
-  if (!window.location.pathname.endsWith("class.html")) return;
+  if (!pathEndsWith("class.html")) return;
 
   let classesList = readClasses();
+  const container = document.getElementById("availableclass");
 
   function renderClasses() {
-    const container = document.getElementById("availableclass");
     if (!container) return;
     container.innerHTML = "";
-    if (classesList.length === 0) {
+    if (!classesList || classesList.length === 0) {
       container.innerHTML = `<p class="no-class">No classes created yet.</p>`;
       return;
     }
     classesList.forEach((c, i) => {
       const btn = document.createElement("button");
       btn.className = "classes";
-      btn.onclick = () => window.location.href = `class-details.html?classId=${c.id}`;
+      btn.onclick = () => (window.location.href = `class-details.html?classId=${c.id}`);
       btn.innerHTML = `
         <div class="text">
           <h1>${c.name}</h1>
-          <p>${c.semester}</p>
+          <p>${c.semester || c.section || ""}</p>
         </div>
         <button class="delete-btn" onclick="event.stopPropagation(); removeClass(${i})">
           <img src="image/trash.png" alt="Remove Class" class="delete-icon">
@@ -85,8 +252,7 @@ function getClassById(classId) {
     });
   }
 
-  // expose global addClass because your HTML calls it inline
-  window.addClass = function() {
+  window.addClass = function () {
     const nameInput = document.getElementById("addedClass");
     const semesterSelect = document.getElementById("semester-select");
     const className = nameInput?.value.trim();
@@ -96,35 +262,33 @@ function getClassById(classId) {
     const newClass = { id: Date.now(), name: className, semester };
     classesList.push(newClass);
     writeClasses(classesList);
-    // ensure an empty student list is created for this class (keeps independence)
-    saveStudentsFor(newClass.id, []);
+    saveStudentsFor(newClass.id, []); // initialize per-user students store
     nameInput.value = "";
     semesterSelect.value = "";
     renderClasses();
   };
 
-  // expose removeClass globally (HTML uses inline)
-  window.removeClass = function(index) {
+  window.removeClass = function (index) {
     if (!confirm("Remove this class and all its student data?")) return;
     const c = classesList[index];
-    if (c?.id) {
-      localStorage.removeItem(studentsKey(c.id));
+    if (c && c.id) {
+      const user = currentUser() || "guest";
+      localStorage.removeItem(`studentsList_${user}_${c.id}`);
     }
     classesList.splice(index, 1);
     writeClasses(classesList);
     renderClasses();
   };
 
+  // initial render
   renderClasses();
 })();
 
 // -----------------------------
-// class-details.html module
-// - Patches card links to include classId automatically
-// - Optionally shows a student preview table if present
+// CLASS DETAILS PAGE (class-details.html)
 // -----------------------------
 (function classDetailsModule() {
-  if (!window.location.pathname.endsWith("class-details.html")) return;
+  if (!pathEndsWith("class-details.html")) return;
 
   const classId = getClassIdFromURL();
   const currentClass = getClassById(classId);
@@ -134,231 +298,141 @@ function getClassById(classId) {
     return;
   }
 
-  // Update heading
   const subjectEl = document.querySelector(".subjectname");
-  if (subjectEl) subjectEl.textContent = `${currentClass.name} - ${currentClass.semester}`;
+  if (subjectEl) subjectEl.textContent = `${currentClass.name} - ${currentClass.semester || ""}`;
 
-  // Patch card buttons (handles many HTML variants)
-  // We search for any element with class "card-btn" and modify its onclick href
-  document.querySelectorAll(".card-btn").forEach(btn => {
-    // 1) If element has a dataset.target attribute, use it
-    if (btn.dataset && btn.dataset.target) {
-      btn.onclick = (e) => {
-        e.preventDefault();
-        window.location.href = `${btn.dataset.target}${btn.dataset.target.includes('?') ? '&' : '?'}classId=${classId}`;
-      };
-      return;
-    }
-
-    // 2) If it has an inline onclick that sets window.location.href, extract and patch
-    const onclickAttr = btn.getAttribute && btn.getAttribute('onclick');
-    if (onclickAttr && onclickAttr.includes('window.location.href')) {
-      const m = onclickAttr.match(/window\.location\.href\s*=\s*['"]([^'"]+)['"]/);
-      if (m && m[1]) {
-        const targetUrl = m[1];
-        btn.removeAttribute('onclick');
-        btn.style.cursor = 'pointer';
-        btn.addEventListener('click', (e) => {
-          e.preventDefault();
-          // append classId if not already present
-          const final = targetUrl + (targetUrl.includes('?') ? '&' : '?') + 'classId=' + encodeURIComponent(classId);
-          window.location.href = final;
-        });
-        return;
-      }
-    }
-
-    // 3) As fallback: if it's a button wrapping a link or has inner <a>, patch anchor href
-    const anchor = btn.querySelector && btn.querySelector('a[href]');
-    if (anchor) {
-      const href = anchor.getAttribute('href');
-      if (href) {
-        anchor.addEventListener('click', (e) => {
-          e.preventDefault();
-          const final = href + (href.includes('?') ? '&' : '?') + 'classId=' + encodeURIComponent(classId);
-          window.location.href = final;
-        });
-        return;
-      }
-    }
-
-    // 4) Last fallback: if button text hints at target, map common words to filenames
-    const txt = (btn.textContent || '').toLowerCase();
-    if (txt.includes('student')) {
-      btn.addEventListener('click', () => window.location.href = `add-students.html?classId=${classId}`);
-    } else if (txt.includes('score')) {
-      btn.addEventListener('click', () => window.location.href = `add-scores.html?classId=${classId}`);
-    } else if (txt.includes('grade')) {
-      btn.addEventListener('click', () => window.location.href = `add-grades.html?classId=${classId}`);
-    } else if (txt.includes('attend')) {
-      btn.addEventListener('click', () => window.location.href = `add-attendances.html?classId=${classId}`);
-    }
+  const btnMap = [
+    { id: "addStudentsBtn", page: "add-students.html" },
+    { id: "addScoresBtn", page: "add-scores.html" },
+    { id: "addGradesBtn", page: "add-grades.html" },
+    { id: "addAttendanceBtn", page: "add-attendances.html" },
+  ];
+  btnMap.forEach(({ id, page }) => {
+    const btn = document.getElementById(id);
+    if (btn) btn.onclick = () => (window.location.href = `${page}?classId=${classId}`);
   });
-
-  // Optional: if page includes a students table (preview), render it
-  const tableBody = document.getElementById("tableBody");
-  if (tableBody) {
-    let students = loadStudentsFor(classId);
-    function renderStudents() {
-      tableBody.innerHTML = "";
-      if (!students || students.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="2" style="text-align:center;">No students added yet.</td></tr>`;
-        return;
-      }
-      students.forEach((s, i) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${s.name}</td>
-          <td>
-            <button class="btn-edit" onclick="editStudentFromDetails(${i})">Edit</button>
-            <button class="btn-delete" onclick="deleteStudentFromDetails(${i})">Delete</button>
-          </td>
-        `;
-        tableBody.appendChild(tr);
-      });
-    }
-    // expose small helpers used by inline onclicks
-    window.editStudentFromDetails = function(index) {
-      const studentsList = loadStudentsFor(classId);
-      const newName = prompt("Edit Student Name:", studentsList[index]?.name || "");
-      if (newName && newName.trim() !== "") {
-        studentsList[index].name = newName.trim();
-        saveStudentsFor(classId, studentsList);
-        renderStudents();
-      }
-    };
-    window.deleteStudentFromDetails = function(index) {
-      if (!confirm("Delete this student?")) return;
-      const studentsList = loadStudentsFor(classId);
-      studentsList.splice(index, 1);
-      saveStudentsFor(classId, studentsList);
-      renderStudents();
-    };
-    renderStudents();
-  }
 })();
 
 // -----------------------------
-// add-students.html module
+// ADD STUDENTS PAGE (add-students.html)
 // -----------------------------
-// This defines window.addStudent(), window.editStudent(), window.deleteStudent() for inline HTML.
 (function addStudentsModule() {
-  // support filenames: add-students.html
-  if (!window.location.pathname.endsWith("add-students.html")) return;
+  if (!pathEndsWith("add-students.html") && !window.location.pathname.includes("add-students")) return;
 
   const classId = getClassIdFromURL();
   const currentClass = getClassById(classId);
-  if (!classId || !currentClass) {
+  if (!currentClass) {
+    // If class not found, redirect
     alert("No class selected. Returning to class list.");
     window.location.href = "class.html";
     return;
   }
 
-  // update header title if present
-  const subjectEl = document.querySelector(".subjectname");
-  if (subjectEl) subjectEl.textContent = `${currentClass.name} - ${currentClass.semester}`;
-
-  let students = loadStudentsFor(classId);
-  const tableBody = document.getElementById("tableBody");
-
-  function render() {
+  // Render student table (global function used by inline onclick)
+  window.renderStudentTable = function renderStudentTable(classIdParam) {
+    const cid = classIdParam || classId;
+    const tableBody = document.getElementById("tableBody");
     if (!tableBody) return;
+    const students = loadStudentsFor(cid);
     tableBody.innerHTML = "";
     if (!students || students.length === 0) {
-      tableBody.innerHTML = `<tr><td colspan="2" style="text-align:center;">No students added yet.</td></tr>`;
+      tableBody.innerHTML = `<tr><td colspan="2">No students added yet.</td></tr>`;
       return;
     }
-    students.forEach((s, idx) => {
+    students.forEach((s, i) => {
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${s.name}</td>
         <td>
-          <button class="btn-edit" onclick="editStudent(${idx})">Edit</button>
-          <button class="btn-delete" onclick="deleteStudent(${idx})">Delete</button>
+          <button class="btn-edit" onclick="editStudent(${i})"><img src="image/pencil (3).png" alt=""></button>
+          <button class="btn-delete" onclick="deleteStudent(${i})"><img src="image/trash (1).png" alt=""></button>
         </td>
       `;
       tableBody.appendChild(tr);
     });
-  }
+  };
 
-  // global functions (HTML calls these inline)
-  window.addStudent = function() {
-    const nameInput = document.getElementById("studentNameInput");
-    if (!nameInput) return;
-    const name = nameInput.value.trim();
-    if (!name) return alert("Please enter a student's name.");
+  // addStudent is global for inline onclick
+  window.addStudent = function addStudent() {
+    const input = document.getElementById("studentNameInput");
+    if (!input) return alert("Input element not found.");
+    const name = input.value.trim();
+    if (!name) return alert("Enter student name.");
+    const students = loadStudentsFor(classId);
+    // prevent duplicate name
+    if (students.some(s => (s.name || "").toLowerCase() === name.toLowerCase())) {
+      return alert("Student already exists.");
+    }
     const newStudent = {
       id: Date.now(),
       name,
-      scores: { quiz: "", exam: "", project: "" },
-      grades: { prelim: "", midterm: "", finals: "", finalGrade: "", remark: "" },
+      grades: { prelim: "", midterm: "", semifinals: "", finals: "", final: "", locked: false },
+      scores: { quiz: "", project: "", exam: "", average: "" },
       attendance: []
     };
     students.push(newStudent);
     saveStudentsFor(classId, students);
-    nameInput.value = "";
-    render();
+    input.value = "";
+    renderStudentTable(classId);
   };
 
-  window.editStudent = function(index) {
-    const newName = prompt("Edit Student Name:", students[index]?.name || "");
-    if (newName && newName.trim() !== "") {
-      students[index].name = newName.trim();
+  window.editStudent = function editStudent(i) {
+    const students = loadStudentsFor(classId);
+    const s = students[i];
+    if (!s) return;
+    const newName = prompt("Edit student name:", s.name);
+    if (newName && newName.trim()) {
+      s.name = newName.trim();
       saveStudentsFor(classId, students);
-      render();
+      renderStudentTable(classId);
     }
   };
 
-  window.deleteStudent = function(index) {
+  window.deleteStudent = function deleteStudent(i) {
+    const students = loadStudentsFor(classId);
+    if (!students[i]) return;
     if (!confirm("Delete this student?")) return;
-    students.splice(index, 1);
+    students.splice(i, 1);
     saveStudentsFor(classId, students);
-    render();
+    renderStudentTable(classId);
   };
 
-  // auto-save on leave, just in case
-  window.addEventListener("beforeunload", () => saveStudentsFor(classId, students));
+  // back button link
+  const backBtn = document.getElementById("backBtn");
+  if (backBtn) {
+    backBtn.onclick = () => window.location.href = `class-details.html?classId=${classId}`;
+  }
 
-  render();
+  // initial render
+  document.addEventListener("DOMContentLoaded", () => renderStudentTable(classId));
 })();
 
 // -----------------------------
-// add-scores.html module
+// ADD SCORES PAGE (add-scores.html)
 // -----------------------------
 (function addScoresModule() {
-  // accept both add-score.html and add-scores.html filenames
-  if (!window.location.pathname.endsWith("add-score.html") && !window.location.pathname.endsWith("add-scores.html")) return;
+  if (!pathEndsWith("add-scores.html") && !window.location.pathname.includes("add-scores")) return;
 
   const classId = getClassIdFromURL();
   const currentClass = getClassById(classId);
-  if (!classId || !currentClass) {
-    alert("No class selected. Returning to class list.");
-    window.location.href = "class.html";
-    return;
-  }
+  if (!currentClass) { alert("No class selected."); window.location.href = "class.html"; return; }
 
-  const subjectEl = document.querySelector(".subjectname");
-  if (subjectEl) subjectEl.textContent = `${currentClass.name} - ${currentClass.semester}`;
-
-  let students = loadStudentsFor(classId);
   const tableBody = document.getElementById("tableBody");
 
   function render() {
     if (!tableBody) return;
+    const students = loadStudentsFor(classId);
     tableBody.innerHTML = "";
-    if (!students || students.length === 0) {
-      tableBody.innerHTML = `<tr><td colspan="5">No students added yet.</td></tr>`;
-      return;
-    }
-    students.forEach(s => {
-      if (!s.scores) s.scores = { quiz: "", exam: "", project: "" };
+    if (!students.length) { tableBody.innerHTML = `<tr><td colspan="5">No students added yet.</td></tr>`; return; }
+    students.forEach((s, i) => {
+      if (!s.scores) s.scores = { quiz: "", project: "", exam: "", average: "" };
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${s.name}</td>
-        <td><input type="number" min="0" max="100" value="${s.scores.quiz}" class="score-input" data-type="quiz" data-id="${s.id}"></td>
-        <td><input type="number" min="0" max="100" value="${s.scores.exam}" class="score-input" data-type="exam" data-id="${s.id}"></td>
-        <td><input type="number" min="0" max="100" value="${s.scores.project}" class="score-input" data-type="project" data-id="${s.id}"></td>
-        <td><button class="btn-clear" data-id="${s.id}">Clear</button></td>
+        <td><input type="number" class="score-input" data-id="${s.id}" data-field="quiz" min="0" max="100" value="${s.scores.quiz || ""}"></td>
+        <td><input type="number" class="score-input" data-id="${s.id}" data-field="project" min="0" max="100" value="${s.scores.project || ""}"></td>
+        <td><input type="number" class="score-input" data-id="${s.id}" data-field="exam" min="0" max="100" value="${s.scores.exam || ""}"></td>
+        <td class="avg-cell">${s.scores.average || ""}</td>
       `;
       tableBody.appendChild(tr);
     });
@@ -367,149 +441,175 @@ function getClassById(classId) {
   document.addEventListener("input", (e) => {
     if (!e.target.classList.contains("score-input")) return;
     const id = Number(e.target.dataset.id);
-    const type = e.target.dataset.type;
-    const value = e.target.value;
+    const field = e.target.dataset.field;
+    const value = e.target.value === "" ? "" : Number(e.target.value);
+    const students = loadStudentsFor(classId);
     const student = students.find(x => x.id === id);
     if (!student) return;
-    student.scores = student.scores || { quiz: "", exam: "", project: "" };
-    student.scores[type] = value;
+    student.scores[field] = value;
+    const q = Number(student.scores.quiz) || 0;
+    const p = Number(student.scores.project) || 0;
+    const ex = Number(student.scores.exam) || 0;
+    const avg = ((q + p + ex) / 3).toFixed(2);
+    student.scores.average = isNaN(avg) ? "" : avg;
     saveStudentsFor(classId, students);
+    const row = e.target.closest("tr");
+    if (row) row.querySelector(".avg-cell").textContent = student.scores.average;
   });
 
-  document.addEventListener("click", (e) => {
-    if (!e.target.matches(".btn-clear")) return;
-    const id = Number(e.target.dataset.id);
-    if (!confirm("Clear scores for this student?")) return;
-    const student = students.find(x => x.id === id);
-    if (!student) return;
-    student.scores = { quiz: "", exam: "", project: "" };
-    saveStudentsFor(classId, students);
-    render();
-  });
-
-  window.addEventListener("beforeunload", () => saveStudentsFor(classId, students));
-
-  render();
+  document.addEventListener("DOMContentLoaded", render);
 })();
 
 // -----------------------------
-// add-grades.html module
+// ADD GRADES PAGE (add-grades.html)
 // -----------------------------
 (function addGradesModule() {
-  // accept add-grade.html and add-grades.html
-  if (!window.location.pathname.endsWith("add-grade.html") && !window.location.pathname.endsWith("add-grades.html")) return;
+  if (!pathEndsWith("add-grades.html") && !window.location.pathname.includes("add-grades")) return;
 
   const classId = getClassIdFromURL();
   const currentClass = getClassById(classId);
-  if (!classId || !currentClass) {
-    alert("No class selected. Returning to class list.");
-    window.location.href = "class.html";
-    return;
-  }
+  if (!currentClass) { alert("No class selected."); window.location.href = "class.html"; return; }
 
-  const subjectEl = document.querySelector(".subjectname");
-  if (subjectEl) subjectEl.textContent = `${currentClass.name} - ${currentClass.semester}`;
-
-  let students = loadStudentsFor(classId);
   const tableBody = document.getElementById("tableBody");
 
-  function computeFinal(prelim, midterm, finals) {
-    const p = Number(prelim) || 0;
-    const m = Number(midterm) || 0;
-    const f = Number(finals) || 0;
-    return Math.round(((p + m + f) / 3) * 100) / 100;
+  function computeFinalFromGrades(g) {
+    // Accept numeric strings or numbers; only use fields that are valid numbers
+    const p = parseFloat(g.prelim) || 0;
+    const m = parseFloat(g.midterm) || 0;
+    const s = parseFloat(g.semifinals) || 0;
+    const f = parseFloat(g.finals) || 0;
+    // Use the four values' average; if all zero => empty
+    const values = [p, m, s, f].filter(v => v > 0);
+    if (values.length === 0) return { final: "", remarks: "" };
+    const avg = (p + m + s + f) / 4;
+    const rounded = avg.toFixed(2);
+    const remarks = avg <= 3.00 ? "Passed" : "Failed";
+    return { final: rounded, remarks };
+  }
+
+  function isValidGradeFormat(val) {
+    // Must be like 1.00 to 5.00 (allow leading 1-5 and exactly two decimals)
+    return /^[1-5](\.[0-9]{2})$/.test(String(val));
   }
 
   function render() {
     if (!tableBody) return;
+    const students = loadStudentsFor(classId);
     tableBody.innerHTML = "";
-    if (!students || students.length === 0) {
-      tableBody.innerHTML = `<tr><td colspan="6">No students added yet.</td></tr>`;
-      return;
-    }
-    students.forEach(s => {
-      s.grades = s.grades || { prelim: "", midterm: "", finals: "", finalGrade: "", remark: "" };
+    if (!students.length) { tableBody.innerHTML = `<tr><td colspan="7">No students added yet.</td></tr>`; return; }
+
+    students.forEach((s, i) => {
+      s.grades = s.grades || { prelim: "", midterm: "", semifinals: "", finals: "", final: "", remarks: "" };
+      const { final, remarks } = computeFinalFromGrades(s.grades);
+      s.grades.final = final;
+      s.grades.remarks = remarks;
+
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${s.name}</td>
-        <td><input type="number" min="0" max="100" value="${s.grades.prelim}" class="grade-input" data-field="prelim" data-id="${s.id}"></td>
-        <td><input type="number" min="0" max="100" value="${s.grades.midterm}" class="grade-input" data-field="midterm" data-id="${s.id}"></td>
-        <td><input type="number" min="0" max="100" value="${s.grades.finals}" class="grade-input" data-field="finals" data-id="${s.id}"></td>
-        <td class="final-grade-cell">${s.grades.finalGrade || ""}</td>
-        <td class="remark-cell">${s.grades.remark || ""}</td>
+        <td><input type="text" maxlength="4" placeholder="1.00" value="${s.grades.prelim || ""}" data-field="prelim" data-index="${i}"></td>
+        <td><input type="text" maxlength="4" placeholder="1.00" value="${s.grades.midterm || ""}" data-field="midterm" data-index="${i}"></td>
+        <td><input type="text" maxlength="4" placeholder="1.00" value="${s.grades.semifinals || ""}" data-field="semifinals" data-index="${i}"></td>
+        <td><input type="text" maxlength="4" placeholder="1.00" value="${s.grades.finals || ""}" data-field="finals" data-index="${i}"></td>
+        <td class="final-grade-cell">${s.grades.final || ""}</td>
+        <td class="remark-cell">${s.grades.remarks || ""}</td>
       `;
       tableBody.appendChild(tr);
     });
+
+    // persist any computed finals
+    saveStudentsFor(classId, students);
   }
 
-  document.addEventListener("input", (e) => {
-    if (!e.target.classList.contains("grade-input")) return;
-    const id = Number(e.target.dataset.id);
-    const field = e.target.dataset.field;
-    const val = e.target.value;
-    const student = students.find(x => x.id === id);
-    if (!student) return;
-    student.grades = student.grades || {};
-    student.grades[field] = val;
-    const final = computeFinal(student.grades.prelim, student.grades.midterm, student.grades.finals);
-    student.grades.finalGrade = final;
-    student.grades.remark = final >= 75 ? "Passed" : "Failed";
-    saveStudentsFor(classId, students);
-    const row = [...document.querySelectorAll("#tableBody tr")].find(r => r.querySelector(`.grade-input[data-id='${id}']`));
-    if (row) {
-      const finalCell = row.querySelector(".final-grade-cell");
-      const remarkCell = row.querySelector(".remark-cell");
-      if (finalCell) finalCell.textContent = student.grades.finalGrade;
-      if (remarkCell) remarkCell.textContent = student.grades.remark;
+  // live input handling (validate and auto-save)
+  tableBody?.addEventListener("input", (e) => {
+    const input = e.target;
+    if (!input || input.tagName !== "INPUT" || !input.dataset.field) return;
+    const idx = Number(input.dataset.index);
+    const field = input.dataset.field;
+    const raw = input.value.trim();
+
+    // enforce format 1.00 - 5.00
+    if (raw === "") {
+      input.style.border = "";
+      // clear the saved field
+    } else if (!isValidGradeFormat(raw)) {
+      input.style.border = "1px solid red";
+      return;
+    } else {
+      input.style.border = "";
     }
+
+    const students = loadStudentsFor(classId);
+    const student = students[idx];
+    if (!student) return;
+
+    student.grades = student.grades || {};
+    // store as string with two decimals if valid, else empty
+    student.grades[field] = raw === "" ? "" : parseFloat(raw).toFixed(2);
+
+    const { final, remarks } = computeFinalFromGrades(student.grades);
+    student.grades.final = final;
+    student.grades.remarks = remarks;
+
+    saveStudentsFor(classId, students);
+    // re-render to update final/remarks cells
+    render();
   });
 
-  window.addEventListener("beforeunload", () => saveStudentsFor(classId, students));
-
-  render();
+  // initial render
+  document.addEventListener("DOMContentLoaded", render);
 })();
 
 // -----------------------------
-// add-attendance.html module
+// ADD ATTENDANCE PAGE (add-attendance.html)
 // -----------------------------
 (function addAttendanceModule() {
-  // accept add-attendance.html and add-attendances.html
-  if (!window.location.pathname.endsWith("add-attendance.html") && !window.location.pathname.endsWith("add-attendances.html")) return;
+  // 🧱 Prevent running twice
+  if (window.__attendanceLoaded) return;
+  window.__attendanceLoaded = true;
+
+  const path = window.location.pathname;
+  if (
+    !path.endsWith("add-attendance.html") &&
+    !path.endsWith("add-attendances.html")
+  ) return;
 
   const classId = getClassIdFromURL();
   const currentClass = getClassById(classId);
-  if (!classId || !currentClass) {
-    alert("No class selected. Returning to class list.");
+  if (!currentClass) {
+    alert("No class selected.");
     window.location.href = "class.html";
     return;
   }
 
-  const subjectEl = document.querySelector(".subjectname");
-  if (subjectEl) subjectEl.textContent = `${currentClass.name} - ${currentClass.semester}`;
-
-  let students = loadStudentsFor(classId);
   const tableBody = document.getElementById("tableBody");
-  const todayKey = new Date().toLocaleDateString();
 
   function render() {
-    if (!tableBody) return;
+    const students = loadStudentsFor(classId);
     tableBody.innerHTML = "";
-    if (!students || students.length === 0) {
-      tableBody.innerHTML = `<tr><td colspan="3">No students added yet.</td></tr>`;
+
+    if (!students.length) {
+      tableBody.innerHTML = `<tr><td colspan="4">No students added yet.</td></tr>`;
       return;
     }
-    students.forEach(s => {
-      s.attendance = s.attendance || [];
-      const last = s.attendance.length ? s.attendance.at(-1) : null;
-      const lastStatus = last ? last.status : "";
+
+    students.forEach((s, i) => {
+      if (!s.attendance) s.attendance = [];
+      const total = s.attendance.length;
+      const present = s.attendance.filter(a => a.status === "Present").length;
+      const absent = total - present;
+
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${s.name}</td>
-        <td>${todayKey}</td>
+        <td>${present}</td>
+        <td>${absent}</td>
         <td>
-          <select class="attendance-select" data-id="${s.id}">
-            <option value="present" ${lastStatus === "present" ? "selected" : ""}>Present</option>
-            <option value="absent" ${lastStatus === "absent" ? "selected" : ""}>Absent</option>
+          <select class="att-select" data-index="${i}">
+            <option value="">Mark</option>
+            <option value="Present">Present</option>
+            <option value="Absent">Absent</option>
           </select>
         </td>
       `;
@@ -517,23 +617,142 @@ function getClassById(classId) {
     });
   }
 
-  document.addEventListener("change", (e) => {
-    if (!e.target.classList.contains("attendance-select")) return;
-    const id = Number(e.target.dataset.id);
-    const val = e.target.value;
-    const student = students.find(x => x.id === id);
+  // ✅ Ensure only one listener is ever attached
+  tableBody?.addEventListener("change", (e) => {
+    const el = e.target;
+    if (!el.classList.contains("att-select")) return;
+
+    const idx = Number(el.dataset.index);
+    const val = el.value;
+    if (!val) return;
+
+    const students = loadStudentsFor(classId);
+    const student = students[idx];
     if (!student) return;
     if (!student.attendance) student.attendance = [];
-    const dateStatus = { date: todayKey, status: val };
-    if (student.attendance.length && student.attendance.at(-1).date === todayKey) {
-      student.attendance[student.attendance.length - 1] = dateStatus;
-    } else {
-      student.attendance.push(dateStatus);
-    }
-    saveStudentsFor(classId, students);
-  });
 
-  window.addEventListener("beforeunload", () => saveStudentsFor(classId, students));
+    // Optional: prevent duplicate marking for same date
+    const today = new Date().toLocaleDateString();
+    const alreadyMarked = student.attendance.some(a => a.date === today);
+    if (alreadyMarked) {
+      alert(`${student.name} is already marked for today.`);
+      return;
+    }
+
+    student.attendance.push({ date: today, status: val });
+    saveStudentsFor(classId, students);
+    render();
+  });
 
   render();
 })();
+
+
+// -----------------------------
+// DASHBOARD MODULE (dashboard.html) — minimal & dynamic
+// -----------------------------
+(function dashboardModule() {
+  if (!pathEndsWith('dashboard.html')) return;
+
+  function readClassesDashboard() { try { return JSON.parse(localStorage.getItem('classesList_' + (currentUser() || 'guest'))) || []; } catch { return []; } }
+  function loadStudentsDashboard(classId) { try { return JSON.parse(localStorage.getItem(`studentsList_${currentUser() || 'guest'}_${classId}`)) || []; } catch { return []; } }
+
+  const totalStudentsEl = document.getElementById('totalStudents');
+  const totalClassesEl = document.getElementById('totalClasses');
+  const totalPresentEl = document.getElementById('totalPresent');
+  const totalAbsentEl = document.getElementById('totalAbsent');
+  const classesListEl = document.getElementById('classesList');
+  const canvas = document.getElementById('attendanceChart');
+
+  const classes = readClassesDashboard();
+  let totalStudents = 0, totalPresent = 0, totalAbsent = 0;
+  const labels = [], presents = [], absents = [];
+
+  if (classesListEl) classesListEl.innerHTML = '';
+
+  classes.forEach(c => {
+    const students = loadStudentsDashboard(c.id);
+    const presentCount = students.reduce((acc, s) => acc + ((s.attendance || []).filter(a => a.status === 'Present').length), 0);
+    const absentCount = students.reduce((acc, s) => acc + ((s.attendance || []).filter(a => a.status === 'Absent').length), 0);
+    const studentCount = students.length;
+
+    totalStudents += studentCount;
+    totalPresent += presentCount;
+    totalAbsent += absentCount;
+
+    labels.push(c.name);
+    presents.push(presentCount);
+    absents.push(absentCount);
+
+    if (classesListEl) {
+      const div = document.createElement('div');
+      div.className = 'class-item';
+      div.innerHTML = `
+        <div>
+          <div style="font-weight:700">${c.name}</div>
+          <div class="meta">${c.semester}</div>
+        </div>
+        <div class="counts">
+          <div style="font-weight:700">${studentCount}</div>
+          <div class="small">${presentCount} P • ${absentCount} A</div>
+          <div style="margin-top:6px"><a href="class-details.html?classId=${c.id}" style="color:var(--accent);text-decoration:none;font-weight:600">Open</a></div>
+        </div>`;
+      classesListEl.appendChild(div);
+    }
+  });
+
+  if (totalStudentsEl) totalStudentsEl.textContent = totalStudents;
+  if (totalClassesEl) totalClassesEl.textContent = classes.length;
+  if (totalPresentEl) totalPresentEl.textContent = totalPresent;
+  if (totalAbsentEl) totalAbsentEl.textContent = totalAbsent;
+
+  // optional simple canvas chart
+  if (canvas && labels.length > 0) {
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const maxVal = Math.max(...presents, ...absents, 1);
+    const padding = 30;
+    const barGroupHeight = 28;
+    const gap = 18;
+    const startX = 140;
+    const usableWidth = canvas.width - startX - padding;
+    ctx.font = '14px Poppins';
+    ctx.fillStyle = '#cfcfcf';
+    labels.forEach((label, i) => {
+      const y = padding + i * (barGroupHeight + gap);
+      ctx.fillStyle = '#cfcfcf';
+      ctx.fillText(label, 10, y + 16);
+      const presentW = Math.round((presents[i] / maxVal) * usableWidth);
+      ctx.fillStyle = 'rgba(0,184,148,0.9)';
+      ctx.fillRect(startX, y, presentW, barGroupHeight / 2 - 2);
+      const absentW = Math.round((absents[i] / maxVal) * usableWidth);
+      ctx.fillStyle = 'rgba(255,99,132,0.85)';
+      ctx.fillRect(startX, y + barGroupHeight / 2 + 2, absentW, barGroupHeight / 2 - 2);
+      ctx.fillStyle = '#cfcfcf';
+      ctx.fillText(`${presents[i]} P`, startX + presentW + 8, y + 12);
+      ctx.fillText(`${absents[i]} A`, startX + absentW + 8, y + barGroupHeight - 2);
+    });
+  } else if (canvas && labels.length === 0) {
+    const ctx = canvas.getContext('2d');
+    ctx.font = '14px Poppins';
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.fillText('No attendance data yet. Add classes & mark attendance to populate chart.', 16, 30);
+  }
+})();
+
+// Logout button functionality
+document.addEventListener("DOMContentLoaded", () => {
+  const logoutBtn = document.querySelector(".logout-btn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("currentUser"); // or clear() if you want to reset everything
+      window.location.href = "index.html";
+    });
+  }
+});
+
+// -----------------------------
+// END OF FILE
+// -----------------------------

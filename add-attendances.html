@@ -1,3 +1,71 @@
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Add Attendance</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="Login-Style.css" />
+  </head>
+  <body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <h2>CLASS DETAILS</h2>
+      <ul>
+        <li><a href="dashboard.html"><img src="image/home.png" alt=""> Dashboard</a></li>
+        <li><a href="class.html"><img src="image/books.png" alt=""> Class</a></li>
+      </ul>
+    </div>
+
+    <!-- Header -->
+    <header class="index-header">
+      <button class="open-btn">☰</button>
+      <h3 class="open-h3">ADD ATTENDANCE</h3>
+      <div class="user">
+        <button><img src="image/user.png" alt=""></button>
+        <div>
+          <ul>
+            <li><a href="">Profile</a><a href="index.html" class="logout">Log out</a></li>
+          </ul>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main content -->
+    <div class="main-content">
+      <button class="back-btn" id="backBtn">BACK</button>
+      <h1 class="subjectname">SUBJECT NAME</h1>
+      <h2>Attendance Tracker</h2>
+      <p>Mark each student as present or absent for today.</p>
+
+      <div class="table-container">
+        <table id="recordTable">
+          <thead>
+            <tr>
+              <th>Student Name</th>
+              <th>Present</th>
+              <th>Absent</th>
+              <th>Mark Attendance</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+
+      </div>
+    </div>
+
+    <script src="Login-script.js"></script>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const classId = params.get("classId");
+      document.getElementById("backBtn").onclick = () => {
+        window.location.href = `class-details.html?classId=${classId}`;
+      };
+    </script>
+  </body>
+  </html>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,7 +78,6 @@
   <link rel="stylesheet" href="Login-Style.css" />
 </head>
 <body>
-  <!-- Sidebar -->
   <div class="sidebar">
     <h2>CLASS DETAILS</h2>
     <ul>
@@ -19,7 +86,6 @@
     </ul>
   </div>
 
-  <!-- Header -->
   <header class="index-header">
     <button class="open-btn">☰</button>
     <h3 class="open-h3">ADD ATTENDANCE</h3>
@@ -27,41 +93,36 @@
       <button><img src="image/user.png" alt=""></button>
       <div>
         <ul>
-          <li><a href="">Profile</a><a href="index.html" class="logout">Log out</a></li>
+          <li><a href="#">Profile</a><a href="#" class="logout">Log out</a></li>
         </ul>
       </div>
     </div>
   </header>
 
-  <!-- Main content -->
   <div class="main-content">
     <button class="back-btn" id="backBtn">BACK</button>
     <h1 class="subjectname">SUBJECT NAME</h1>
-    <h2>Attendance Tracker</h2>
-    <p>Mark each student as present or absent for today.</p>
 
-    <div class="table-container">
-      <table id="recordTable">
-        <thead>
-          <tr>
-            <th>Student Name</th>
-            <th>Date</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
+    <div class="card">
+      <h2>Attendance Tracker</h2>
+      <p>Mark each student as present or absent for today.</p>
+      <div class="table-container">
+        <table id="recordTable">
+          <thead>
+            <tr>
+              <th>Student Name</th>
+              <th>Present</th>
+              <th>Absent</th>
+              <th>Mark Attendance</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
   <script src="Login-script.js"></script>
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    const classId = params.get("classId");
-    document.getElementById("backBtn").onclick = () => {
-      window.location.href = `class-details.html?classId=${classId}`;
-    };
-  </script>
+
 </body>
 </html>

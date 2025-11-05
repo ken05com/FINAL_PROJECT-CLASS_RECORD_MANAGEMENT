@@ -96,24 +96,25 @@ body {
   right: 20px;
   display: flex;
   align-items: center;
-  flex-direction: column;
+  flex-direction: row;
 }
 
 .user button {
-  background: #00b894;
+  background: transparent;
   color: white;
   border: none;
-  border-radius: 20px;
   padding: 8px 16px;
   padding-top: 11px;
   font-weight: 600;
   cursor: pointer;
-  transition: 0.3s ease;
 }
 
-.user button:hover {
-  background: #00d3a6;
-  transform: scale(1.05);
+.user .lagout-btn:hover {
+  color: #ff4d4d;
+}
+
+.user .profile-btn:hover {
+  color: #00b894;
 }
 
 /* Dropdown */
@@ -282,6 +283,18 @@ input:focus {
   border-color: #00b894;
 }
 
+#addedClass {
+  width: 320px; /* match new card width */
+  background-color: #1B1B1B;
+  border: 1px solid #00b894;
+  color: white;
+}
+
+#addedClass:focus {
+  border-color: #00d3a6;
+}
+
+
 select {
   width: 400px;
   height: 44px;
@@ -292,11 +305,25 @@ select {
   color: white;
   font-size: 14px;
   transition: border-color 0.2s;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 select:focus {
   outline: none;
   border-color: #00b894;
 }
+
+#semester-select {
+  width: 320px; /* match new card width */
+  background-color: #1B1B1B;
+  border: 1px solid #00b894;
+  color: white;
+}
+
+#semester-select:focus {
+  border-color: #00d3a6;
+}
+
 
 .availableclass-header {
   padding-top: 15px;
@@ -315,7 +342,7 @@ select:focus {
 .classes {
   cursor: pointer;
   width: 30%; 
-  height: 120px;
+  height: 160px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -444,7 +471,7 @@ th {
 
 
 #recordTable td input[type="number"] {
-  width: 110px;
+  width: 60px;
   padding: 5px;
   text-align: center;
   background-color: transparent;
@@ -470,9 +497,9 @@ th {
   background-color: #1B1B1B;
   color: white;
   border-radius: 12px;
-  padding: 20px;
-  width: 260px;
-  height: 320px;
+  padding: 24px;
+  width: 320px; /* Increased from 260px to 320px */
+  height: 340px; /* Slightly taller for balance */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -480,13 +507,7 @@ th {
   text-align: center;
   border: 1px solid #00b894;
   transition: all 0.3s ease;
-  /* box-shadow: 0 0 10px rgba(0,184,148,0.2); */
 }
-
-/* .card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 0 20px rgba(0,184,148,0.4);
-} */
 
 .card img {
   width: 100px;
@@ -539,4 +560,127 @@ th {
   border: none;
   padding: 0;
   cursor: pointer;
+}
+
+
+/* Compact, balanced grade table layout */
+#recordTable {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+  table-layout: fixed;
+}
+
+#recordTable th,
+#recordTable td {
+  padding: 8px;
+  font-size: 14px;
+  word-wrap: break-word;
+}
+
+/* Student Name column */
+#recordTable th:nth-child(1),
+#recordTable td:nth-child(1) {
+  width: 180px; /* previously too wide, now fixed width */
+  text-align: left;
+  padding-left: 10px;
+}
+
+/* Grade input columns */
+#recordTable th:nth-child(2),
+#recordTable th:nth-child(3),
+#recordTable th:nth-child(4),
+#recordTable th:nth-child(5),
+#recordTable td:nth-child(2),
+#recordTable td:nth-child(3),
+#recordTable td:nth-child(4),
+#recordTable td:nth-child(5) {
+  width: 75px;
+}
+
+/* Final Grade and Remarks columns */
+#recordTable th:nth-child(6),
+#recordTable td:nth-child(6) {
+  width: 90px;
+}
+
+#recordTable th:nth-child(7),
+#recordTable td:nth-child(7) {
+  width: 110px;
+}
+
+/* Grade input styling */
+#recordTable input[type="number"],
+#recordTable input[type="text"] {
+  width: 60px;
+  text-align: center;
+  padding: 4px;
+  font-size: 14px;
+}
+
+/* Compact attendance table layout */
+#recordTable,
+#tableBody {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+  table-layout: fixed;
+}
+
+#recordTable th,
+#recordTable td {
+  padding: 8px;
+  font-size: 14px;
+  word-wrap: break-word;
+}
+
+/* Student Name */
+#recordTable th:nth-child(1),
+#recordTable td:nth-child(1) {
+  width: 180px;   /* smaller than before */
+  text-align: left;
+  padding-left: 10px;
+}
+
+/* Present */
+#recordTable th:nth-child(2),
+#recordTable td:nth-child(2) {
+  width: 80px;
+}
+
+/* Absent */
+#recordTable th:nth-child(3),
+#recordTable td:nth-child(3) {
+  width: 80px;
+}
+
+/* Mark Attendance (dropdown) */
+#recordTable th:nth-child(4),
+#recordTable td:nth-child(4) {
+  width: 140px;
+}
+
+/* Dropdown styling */
+#recordTable select {
+  width: 100px;
+  padding: 4px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.btn-edit,
+.btn-delete {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;          /* <-- this controls the space inside each button */
+  margin: 0 3px;         /* <-- optional spacing between buttons */
+}
+
+.btn-edit img,
+.btn-delete img {
+  width: 30px;           /* icon size */
+  height: 20px;
+  object-fit: contain;
+  vertical-align: middle;
 }
