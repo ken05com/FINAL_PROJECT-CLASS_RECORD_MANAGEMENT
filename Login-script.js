@@ -160,18 +160,37 @@ function pathEndsWith(name) {
         return;
       }
 
+      const joinDate = new Date().toLocaleDateString("en-US", {
+        month: "long", day: "numeric", year: "numeric"
+      });
+
+      // Add to main user list
       users.push({
         fullName: fullName.trim(),
         email: email.trim(),
         username: username.trim(),
         password,
+        joined: joinDate
       });
 
       localStorage.setItem("users", JSON.stringify(users));
-      showMsg(msgEl, "Account created. Redirecting to Sign In...", "success");
-      setTimeout(() => (window.location.href = "signin.html"), 700);
+
+      // Save full user profile info (for profile page)
+      localStorage.setItem(
+        "user_" + username.trim(),
+        JSON.stringify({
+          fullname: fullName.trim(),
+          email: email.trim(),
+          joined: joinDate
+        })
+      );
+
+      showMsg(msgEl, "Account created successfully!", "success");
+      signupForm.reset();
+      setTimeout(() => window.location.href = "index.html", 1200);
     });
   }
+
 
   // LOGOUT FUNCTION — can be used by logout button anywhere
   window.logout = function () {
@@ -752,6 +771,62 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
+// -----------------------------
+// PROFILE PAGE MODULE (profile.html)
+// -----------------------------
+(function profileModule() {
+  if (!pathEndsWith("profile.html")) return;
+
+  const username = localStorage.getItem("loggedInUser");
+  if (!username) {
+    window.location.href = "index.html";
+    return;
+  }
+
+  // Profile elements
+  const nameEl = document.getElementById("profileName");
+  const emailEl = document.getElementById("profileEmail");
+  const joinedEl = document.getElementById("profileJoined");
+  const photoEl = document.getElementById("profilePhoto");
+  const uploadBtn = document.getElementById("uploadBtn");
+
+  // Load stored user info
+  const users = JSON.parse(localStorage.getItem("users")) || [];
+  const userData = users.find(u => u.username === username);
+
+  // Default profile info if not found
+  const displayName = userData?.fullName || username;
+  const displayEmail = userData?.email || "No email provided";
+  const displayJoined = userData?.joined || "Unknown";
+
+  if (nameEl) nameEl.textContent = displayName;
+  if (emailEl) emailEl.textContent = displayEmail;
+  if (joinedEl) joinedEl.textContent = `Joined: ${displayJoined}`;
+
+  // Load or set default photo
+  const savedPhoto = localStorage.getItem(`profilePhoto_${username}`);
+  if (photoEl) {
+    photoEl.src = savedPhoto || "image/default-profile.png";
+  }
+
+  // Upload handler
+  if (uploadBtn) {
+    uploadBtn.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = reader.result;
+        localStorage.setItem(`profilePhoto_${username}`, base64);
+        if (photoEl) photoEl.src = base64;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+})();
+
 
 // -----------------------------
 // END OF FILE

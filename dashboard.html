@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="Login-Style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     body {
       background-color: #121212;
@@ -68,13 +69,35 @@
 
     canvas {
       width: 100% !important;
-      height: 380px !important;
+      height: 400px !important;
     }
 
     .main-content {
       margin-left: 240px;
       padding: 1rem 2rem;
     }
+
+    .logout-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background-color: #00b894;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .logout-btn img {
+      height: 18px;
+      width: 18px;
+      object-fit: contain;
+    }
+
 
     @media (max-width: 900px) {
       .main-content {
@@ -89,7 +112,7 @@
   <div class="sidebar">
     <h2>DASHBOARD</h2>
     <ul>
-      <li><a href=""><img src="image/user.png" alt=""> Profile</a></li>
+      <li><a href="profile.html"><img src="image/user.png" alt=""> Profile</a></li>
       <li><a href="dashboard.html"><img src="image/home.png" alt=""> Dashboard</a></li>
       <li><a href="class.html"><img src="image/books.png" alt=""> Class</a></li>
     </ul>
@@ -100,7 +123,7 @@
     <button class="open-btn">☰</button>
     <h3 class="open-h3">DASHBOARD</h3>
     <div class="user">
-      <button class="logout-btn" onclick="logout()">Logout</button>
+      <button class="logout-btn" onclick="logout()"> Logout <img src="image/exit (1).png" alt=""></button>
     </div>
   </header>
 
@@ -122,82 +145,114 @@
     </div>
 
     <div class="chart-section">
-      <h3>Attendance Overview</h3>
+      <h3>Total Balance Overview</h3>
       <canvas id="attendanceChart"></canvas>
     </div>
   </div>
 
-  <script src="Login-script.js"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const user = localStorage.getItem("loggedInUser");
-      if (!user) { window.location.href = "index.html"; return; }
+<script src="Login-script.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const user = localStorage.getItem("loggedInUser");
+  if (!user) { window.location.href = "index.html"; return; }
 
-      const classes = JSON.parse(localStorage.getItem("classesList_" + user)) || [];
-      let totalStudents = 0, presentCount = 0, absentCount = 0, totalAttendanceDays = 0;
+  const classes = JSON.parse(localStorage.getItem("classesList_" + user)) || [];
+  let totalStudents = 0, presentCount = 0, absentCount = 0, totalAttendanceDays = 0;
 
-      classes.forEach(cls => {
-        const students = JSON.parse(localStorage.getItem("studentsList_" + user + "_" + cls.id)) || [];
-        totalStudents += students.length;
-        students.forEach(s => {
-          if (Array.isArray(s.attendance)) {
-            totalAttendanceDays += s.attendance.length;
-            presentCount += s.attendance.filter(a => a.status === "Present").length;
-            absentCount += s.attendance.filter(a => a.status === "Absent").length;
-          }
-        });
-      });
-
-      document.getElementById("totalClasses").textContent = classes.length;
-      document.getElementById("totalStudents").textContent = totalStudents;
-      document.getElementById("totalAttendance").textContent = totalAttendanceDays;
-
-      const ctx = document.getElementById("attendanceChart").getContext("2d");
-
-      const gradientPresent = ctx.createLinearGradient(0, 0, 0, 400);
-      gradientPresent.addColorStop(0, 'rgba(0, 184, 148, 0.4)');
-      gradientPresent.addColorStop(1, 'rgba(0, 184, 148, 0)');
-
-      const gradientAbsent = ctx.createLinearGradient(0, 0, 0, 400);
-      gradientAbsent.addColorStop(0, 'rgba(229, 57, 53, 0.4)');
-      gradientAbsent.addColorStop(1, 'rgba(229, 57, 53, 0)');
-
-      new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-          datasets: [
-            {
-              label: 'Present',
-              data: [presentCount / 5, presentCount / 4, presentCount / 3, presentCount / 2, presentCount],
-              fill: true,
-              backgroundColor: gradientPresent,
-              borderColor: '#00b894',
-              tension: 0.4,
-              borderWidth: 2
-            },
-            {
-              label: 'Absent',
-              data: [absentCount / 4, absentCount / 3, absentCount / 2, absentCount, absentCount / 1.5],
-              fill: true,
-              backgroundColor: gradientAbsent,
-              borderColor: '#E53935',
-              tension: 0.4,
-              borderWidth: 2
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          interaction: { mode: 'index', intersect: false },
-          plugins: { legend: { position: 'bottom', labels: { color: '#fff' } } },
-          scales: {
-            x: { grid: { color: '#333' }, ticks: { color: '#fff' } },
-            y: { beginAtZero: true, ticks: { stepSize: 2, color: '#fff' }, grid: { color: '#333' } }
-          }
-        }
-      });
+  classes.forEach(cls => {
+    const students = JSON.parse(localStorage.getItem("studentsList_" + user + "_" + cls.id)) || [];
+    totalStudents += students.length;
+    students.forEach(s => {
+      if (Array.isArray(s.attendance)) {
+        totalAttendanceDays += s.attendance.length;
+        presentCount += s.attendance.filter(a => a.status === "Present").length;
+        absentCount += s.attendance.filter(a => a.status === "Absent").length;
+      }
     });
-  </script>
+  });
+
+  document.getElementById("totalClasses").textContent = classes.length;
+  document.getElementById("totalStudents").textContent = totalStudents;
+  document.getElementById("totalAttendance").textContent = totalAttendanceDays;
+
+  const ctx = document.getElementById("attendanceChart").getContext("2d");
+
+  // Gradients
+  const gradientPresent = ctx.createLinearGradient(0, 0, 0, 400);
+  gradientPresent.addColorStop(0, 'rgba(0, 184, 148, 0.4)');
+  gradientPresent.addColorStop(1, 'rgba(0, 184, 148, 0)');
+
+  const gradientAbsent = ctx.createLinearGradient(0, 0, 0, 400);
+  gradientAbsent.addColorStop(0, 'rgba(229, 57, 53, 0.4)');
+  gradientAbsent.addColorStop(1, 'rgba(229, 57, 53, 0)');
+
+  // Determine current weekday (1=Monday, 5=Friday)
+  const today = new Date();
+  const weekday = today.getDay(); // 0=Sunday, 6=Saturday
+  const dayIndex = weekday === 0 ? 0 : weekday - 1;
+
+  const labels = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
+  // Generate realistic daily trend: 0 before, actual midweek, 0 after
+  const presentData = labels.map((_, i) =>
+    i < dayIndex ? Math.max(0, presentCount / (dayIndex + 1) * (i + 1) / 5) : 
+    i === dayIndex ? presentCount : 0
+  );
+
+  const absentData = labels.map((_, i) =>
+    i < dayIndex ? Math.max(0, absentCount / (dayIndex + 1) * (i + 1) / 5) : 
+    i === dayIndex ? absentCount : 0
+  );
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Present',
+          data: presentData,
+          fill: true,
+          backgroundColor: gradientPresent,
+          borderColor: '#00b894',
+          tension: 0.4,
+          borderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        },
+        {
+          label: 'Absent',
+          data: absentData,
+          fill: true,
+          backgroundColor: gradientAbsent,
+          borderColor: '#E53935',
+          tension: 0.4,
+          borderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#fff' } },
+        tooltip: { backgroundColor: '#1e1e1e', titleColor: '#00b894', bodyColor: '#fff' }
+      },
+      scales: {
+        x: { grid: { color: '#333' }, ticks: { color: '#fff' } },
+        y: { beginAtZero: true, ticks: { stepSize: 2, color: '#fff' }, grid: { color: '#333' } }
+      }
+    }
+  });
+});
+</script>
+
+
+
+
+
+
 </body>
 </html>

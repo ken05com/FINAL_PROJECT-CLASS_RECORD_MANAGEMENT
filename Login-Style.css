@@ -684,3 +684,26 @@ th {
   object-fit: contain;
   vertical-align: middle;
 }
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* space between text and icon */
+  background-color: #00b894;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.logout-btn img {
+  height: 18px; /* match roughly text height */
+  width: 18px;
+  object-fit: contain;
+}
+
+
