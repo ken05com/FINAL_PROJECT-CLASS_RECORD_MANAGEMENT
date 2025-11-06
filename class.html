@@ -1,27 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Class Record</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="Login-Style.css">
 </head>
+
 <body>
-    
+
     <!-- Sidebar -->
     <div class="sidebar">
         <h2>CLASS RECORD</h2>
         <ul>
             <li><a href="profile.html"><img src="image/user.png" alt=""> Profile</a></li>
-            <li><a href="dashboard.html"><img src="image/home.png" alt="">   Dashboard</a></li>
-            <li><a href="class.html"><img src="image/books.png" alt="">   Class</a></li>
+            <li><a href="dashboard.html"><img src="image/home.png" alt=""> Dashboard</a></li>
+            <li><a href="class.html"><img src="image/books.png" alt=""> Class</a></li>
         </ul>
-        
+
     </div>
-    
+
     <header class="index-header">
         <button class="open-btn">☰</button>
         <h3 class="open-h3">DASHBOARD</h3>
@@ -29,17 +33,18 @@
             <button class="logout-btn" onclick="logout()"> Logout <img src="image/exit (1).png" alt=""></button>
         </div>
     </header>
-        
+
     <!-- Toggle button for mobile -->
 
     <!-- Main content -->
- <div class="main-content">
+    <div class="main-content">
         <h1>Create a New Class</h1>
-        <p>Fill out the form below to set up a new class. Once submitted, you can begin adding assignments and managing students.</p>
-        
+        <p>Fill out the form below to set up a new class. Once submitted, you can begin adding assignments and managing
+            students.</p>
+
         <div class="class-form">
             <p>Please Add a Class & Semester</p>
-            
+
             <input id="addedClass" type="text" placeholder="Add Class Name" required />
 
             <select id="semester-select" name="semester" required>
@@ -48,18 +53,19 @@
                 <option value="2nd Semester">2nd Semester</option>
                 <option value="Summer">Summer</option>
             </select>
-            
+
             <button class="btn btn-submit" onclick="addClass()">Add Class</button>
         </div>
-        
+
         <div class="availableclass-header">
-            <h3>Available Classes</h3> 
+            <h3>Available Classes</h3>
         </div>
-        
+
         <div class="classes-form" id="availableclass"></div>
     </div>
 
 
     <script src="Login-script.js"></script>
 </body>
+
 </html>

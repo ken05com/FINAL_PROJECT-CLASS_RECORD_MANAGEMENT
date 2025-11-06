@@ -153,7 +153,7 @@ function pathEndsWith(name) {
       let users = [];
       try {
         users = JSON.parse(localStorage.getItem("users")) || [];
-      } catch {}
+      } catch { }
 
       if (users.some((u) => u.username === username)) {
         showMsg(msgEl, "Username already exists.", "error");
