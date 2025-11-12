@@ -828,6 +828,109 @@ document.addEventListener("DOMContentLoaded", () => {
 })();
 
 
+function addStudentsModule() {
+  window.importStudents = function () {
+    const file = document.getElementById("excelStudents").files[0];
+    if (!file) return alert("Please select an Excel file.");
+
+    const reader = new FileReader();
+
+    reader.onload = function (event) {
+      const workbook = XLSX.read(event.target.result, { type: "binary" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet);
+
+      if (rows.length === 0) {
+        alert("Excel file is empty or incorrectly formatted.");
+        return;
+      }
+
+      const students = loadStudentsFor(classId);
+
+      rows.forEach(row => {
+        if (!row.Name) return;
+
+        // Prevent duplicates
+        if (students.some(s => s.name.toLowerCase() === row.Name.toLowerCase())) return;
+
+        students.push({
+          id: Date.now() + Math.random(),
+          name: row.Name.trim(),
+          grades: {
+            prelim: row.Prelim || "",
+            midterm: row.Midterm || "",
+            semifinals: row.Semifinals || "",
+            finals: row.Finals || "",
+            final: "",
+            locked: false
+          },
+          scores: { quiz: "", project: "", exam: "", average: "" },
+          attendance: []
+        });
+      });
+
+      saveStudentsFor(classId, students);
+      renderStudentTable(classId);
+      alert("Students imported successfully.");
+    };
+
+    reader.readAsBinaryString(file);
+  };
+
+}
+
+function addStudentsModule() {
+  window.importStudents = function () {
+    const file = document.getElementById("excelStudents").files[0];
+    if (!file) return alert("Please select an Excel file.");
+
+    const reader = new FileReader();
+
+    reader.onload = function (event) {
+      const workbook = XLSX.read(event.target.result, { type: "binary" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet);
+
+      if (rows.length === 0) {
+        alert("Excel file is empty or incorrectly formatted.");
+        return;
+      }
+
+      const students = loadStudentsFor(classId);
+
+      rows.forEach(row => {
+        if (!row.Name) return;
+
+        // Prevent duplicate names
+        if (students.some(s => s.name.toLowerCase() === row.Name.toLowerCase())) return;
+
+        students.push({
+          id: Date.now() + Math.random(),
+          name: row.Name.trim(),
+          grades: {
+            prelim: row.Prelim || "",
+            midterm: row.Midterm || "",
+            semifinals: row.Semifinals || "",
+            finals: row.Finals || "",
+            final: "",
+            remarks: ""
+          },
+          scores: { quiz: "", project: "", exam: "", average: "" },
+          attendance: []
+        });
+      });
+
+      saveStudentsFor(classId, students);
+      renderStudentTable(classId);
+      alert("Students imported successfully.");
+    };
+
+    reader.readAsBinaryString(file);
+  };
+
+}
+
+
 // -----------------------------
 // END OF FILE
 // -----------------------------

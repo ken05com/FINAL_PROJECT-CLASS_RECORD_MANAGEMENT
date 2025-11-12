@@ -42,8 +42,16 @@
       <p>Please Add a Student's full name</p>
       <input id="studentNameInput" type="text" placeholder="Add Student Name" required />
       <button class="btn btn-add" onclick="addStudent()">Add Student</button>
-    </div>
 
+      <div class="import-section">
+        <label class="import-label">Import Students (Excel):</label>
+        <input type="file" id="excelStudents" accept=".xlsx, .xls">
+        <button class="btn-import" onclick="importStudents()">Upload</button>
+      </div>
+
+
+    </div>
+    
     <div class="table-container">
       <table id="recordTable">
         <thead>
@@ -55,16 +63,15 @@
         <tbody id="tableBody"></tbody>
       </table>
     </div>
-  </div>
-
-  <script src="Login-script.js"></script>
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    const classId = params.get("classId");
-    document.getElementById("backBtn").onclick = () => {
-      window.location.href = `class-details.html?classId=${classId}`;
-    };
-  </script>
+    
+    <script src="Login-script.js"></script>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const classId = params.get("classId");
+      document.getElementById("backBtn").onclick = () => {
+        window.location.href = `class-details.html?classId=${classId}`;
+      };
+    </script>
 </body>
 
 </html>

@@ -9,6 +9,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="Login-Style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
 </head>
 
 <body>
@@ -37,24 +39,30 @@
     <h1 class="subjectname">SUBJECT NAME</h1>
     <h2>Grade Management</h2>
     <p>Compute final grades and remarks automatically.</p>
+  </div>
 
-    <div class="table-container">
-      <table id="recordTable">
-        <thead>
-          <tr>
-            <th>Student Name</th>
-            <th>Prelim</th>
-            <th>Midterm</th>
-            <th>Semi-Finals</th>
-            <th>Finals</th>
-            <th>Final Grade</th>
-            <th>Remarks</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
+  <div class="import-section">
+    <label class="import-label">Import Students (Excel):</label>
+    <input type="file" id="excelStudents" accept=".xlsx, .xls">
+    <button class="btn-import" onclick="importStudents()">Upload</button>
+  </div>
 
-    </div>
+
+  <div class="table-container">
+    <table id="recordTable">
+      <thead>
+        <tr>
+          <th>Student Name</th>
+          <th>Prelim</th>
+          <th>Midterm</th>
+          <th>Semi-Finals</th>
+          <th>Finals</th>
+          <th>Final Grade</th>
+          <th>Remarks</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
   </div>
 
   <script src="Login-script.js"></script>

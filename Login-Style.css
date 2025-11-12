@@ -726,3 +726,48 @@ th {
   width: 18px;
   object-fit: contain;
 }
+
+.import-section {
+  margin-bottom: 15px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.btn-import {
+  background: #00b894;
+  color: white;
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-import:hover {
+  background: #01966f;
+}
+
+.import-section {
+  margin-bottom: 15px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.import-label {
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.btn-import {
+  background: #00b894;
+  color: white;
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-import:hover {
+  background: #01966f;
+}
