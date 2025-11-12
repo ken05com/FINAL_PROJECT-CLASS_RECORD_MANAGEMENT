@@ -380,27 +380,6 @@ select:focus {
   color: #cc4c38;
 }
 
-/* li {
-  align-items: center;
-}
-
-li button {
-  cursor: pointer;
-  margin-left: 50px;
-  background-color: transparent;
-  border: none;
-  color: white;
-  padding-right: 40%;
-  padding-bottom: 10px;
-  padding-top: 10px;
-  padding-left: 5px;
-  border-radius: 10px;
-}
-
-li button:hover {
-  background-color: #232323;
-} */
-
 .back-btn {
   cursor: pointer;
   background-color: transparent;
@@ -557,18 +536,6 @@ th {
   background-color: #019870;
 }
 
-/* Responsive Cards */
-/* @media (max-width: 900px) {
-  .cards-container {
-    justify-content: center;
-  }
-
-  .card {
-    width: 85%;
-    height: auto;
-  }
-} */
-
 .card-btn {
   background: none;
   border: none;
@@ -690,9 +657,9 @@ th {
   border: none;
   cursor: pointer;
   padding: 6px;
-  /* <-- this controls the space inside each button */
+  /* this controls the space inside each button */
   margin: 0 3px;
-  /* <-- optional spacing between buttons */
+  /*  optional spacing between buttons */
 }
 
 .btn-edit img,

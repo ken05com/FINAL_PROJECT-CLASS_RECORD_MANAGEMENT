@@ -1,10 +1,4 @@
-// =============================
-// Login-script.js — Unified, User-specific
-// =============================
 
-// -----------------------------
-// UTILITIES & STORAGE HELPERS (user-specific)
-// -----------------------------
 function currentUser() {
   return localStorage.getItem("loggedInUser") || null;
 }
@@ -48,9 +42,7 @@ function pathEndsWith(name) {
   return window.location.pathname.split('/').pop() === name;
 }
 
-// -----------------------------
 // SIDEBAR TOGGLE (shared)
-// -----------------------------
 (function setupSidebarToggle() {
   const openBtn = document.querySelector(".open-btn");
   const sidebar = document.querySelector(".sidebar");
@@ -69,9 +61,9 @@ function pathEndsWith(name) {
   });
 })();
 
-// -----------------------------
+
+
 // AUTH: LOGIN / SIGNUP / LOGOUT
-// -----------------------------
 (function loginModule() {
   const loginForm = document.getElementById("loginForm");
   const usernameInput = document.getElementById("username");
@@ -200,9 +192,8 @@ function pathEndsWith(name) {
 })();
 
 
-// -----------------------------
+
 // GLOBAL LOGOUT CLICK HANDLER (applies to all pages)
-// -----------------------------
 document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".logout").forEach(link => {
     link.addEventListener("click", (e) => {
@@ -218,9 +209,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 
-// -----------------------------
+
+
 // SESSION GUARD FOR PROTECTED PAGES
-// -----------------------------
 (function sessionGuard() {
   const protectedPages = [
     "dashboard.html",
@@ -238,9 +229,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 })();
 
-// -----------------------------
+
+
 // CLASS PAGE (class.html) — create / list / delete
-// -----------------------------
 (function classPageModule() {
   if (!pathEndsWith("class.html")) return;
 
@@ -303,9 +294,8 @@ document.addEventListener("DOMContentLoaded", () => {
   renderClasses();
 })();
 
-// -----------------------------
+
 // CLASS DETAILS PAGE (class-details.html)
-// -----------------------------
 (function classDetailsModule() {
   if (!pathEndsWith("class-details.html")) return;
 
@@ -332,10 +322,9 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 })();
 
-// -----------------------------
+
+
 // ADD STUDENTS PAGE (add-students.html)
-// -----------------------------
-// ...existing code...
 (function addStudentsModule() {
   if (!pathEndsWith("add-students.html") && !window.location.pathname.includes("add-students")) return;
 
@@ -481,11 +470,10 @@ document.addEventListener("DOMContentLoaded", () => {
     renderStudentTable();
   });
 })();
- // ...existing code...s  
 
-// -----------------------------
+
+
 // ADD SCORES PAGE (add-scores.html)
-// -----------------------------
 (function addScoresModule() {
   if (!pathEndsWith("add-scores.html") && !window.location.pathname.includes("add-scores")) return;
 
@@ -536,10 +524,9 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("DOMContentLoaded", render);
 })();
 
-// ...existing code...
-// -----------------------------
+
+
 // ADD GRADES PAGE (add-grades.html)
-// -----------------------------
 (function addGradesModule() {
   if (!pathEndsWith("add-grades.html") && !window.location.pathname.includes("add-grades")) return;
 
@@ -568,7 +555,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return /^[1-5](\.[0-9]{2})$/.test(String(val));
   }
 
-  // ...existing code...
   function render() {
     const tableBody = document.getElementById("tableBody");
     if (!tableBody) return;
@@ -599,7 +585,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     saveStudentsFor(classId, students);
   }
-// ...existing code...
 
   // global input listener (works even if DOM changes)
   document.addEventListener("input", (e) => {
@@ -635,12 +620,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.addEventListener("DOMContentLoaded", render);
 })();
- // ...existing code...
 
-// -----------------------------
-// ADD ATTENDANCE PAGE (add-attendance.html)
-// -----------------------------
-// ...existing code...
+
+ // ADD ATTENDANCE PAGE (add-attendance.html)
 (function addAttendanceModule() {
   // 🧱 Prevent running twice
   if (window.__attendanceLoaded) return;
@@ -730,11 +712,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // initial render once DOM is ready
   document.addEventListener("DOMContentLoaded", render);
 })();
- // ...existing code...
 
-// -----------------------------
+
+
 // DASHBOARD MODULE (dashboard.html) — minimal & dynamic
-// -----------------------------
 (function dashboardModule() {
   if (!pathEndsWith('dashboard.html')) return;
 
@@ -826,6 +807,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 })();
 
+
+
 // Logout button functionality
 document.addEventListener("DOMContentLoaded", () => {
   const logoutBtn = document.querySelector(".logout-btn");
@@ -837,9 +820,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// -----------------------------
+
+
 // PROFILE PAGE MODULE (profile.html)
-// -----------------------------
 (function profileModule() {
   if (!pathEndsWith("profile.html")) return;
 
@@ -891,9 +874,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 })();
-
-
-// ...existing code...
 
 // Replace the duplicate import IIFEs with one safe importer
 (function studentsImportHandler() {
@@ -974,7 +954,3 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 })();
 
-
-// -----------------------------
-// END OF FILE
-// -----------------------------
