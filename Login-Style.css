@@ -416,13 +416,13 @@ li button:hover {
 .class-name {
   background-color: #1B1B1B;
   height: 100%;
-  width: 627px;
+  width: 100%;
   margin-top: 10px;
   justify-content: center;
   align-items: center;
   padding: 10px;
   padding-left: 40px;
-  padding-bottom: 25px;
+  padding-bottom: 10px;
   border-radius: 10px;
 }
 
@@ -771,3 +771,25 @@ th {
 .btn-import:hover {
   background: #01966f;
 }
+
+/* Grades pass/fail colors */
+.final-grade-cell.passed,
+.remark-cell.passed {
+    color: #2ecc71; /* green */
+    font-weight: 600;
+}
+
+.final-grade-cell.failed,
+.remark-cell.failed {
+    color: #e74c3c; /* red */
+    font-weight: 600;
+}
+
+.student-sections {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;            /* reduced from 40px to 20px */
+  width: 80%;
+}
+

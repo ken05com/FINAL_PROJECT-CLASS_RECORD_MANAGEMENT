@@ -38,32 +38,26 @@
     <button class="back-btn" id="backBtn">BACK</button>
     <h1 class="subjectname">SUBJECT NAME</h1>
     <h2>Grade Management</h2>
-    <p>Compute final grades and remarks automatically.</p>
+        
+    <div class="table-container">
+      <table id="recordTable">
+        <thead>
+          <tr>
+            <th>Student Name</th>
+            <th>Prelim</th>
+            <th>Midterm</th>
+            <th>Semi-Finals</th>
+            <th>Finals</th>
+            <th>Final Grade</th>
+            <th>Remarks</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+
   </div>
 
-  <div class="import-section">
-    <label class="import-label">Import Students (Excel):</label>
-    <input type="file" id="excelStudents" accept=".xlsx, .xls">
-    <button class="btn-import" onclick="importStudents()">Upload</button>
-  </div>
-
-
-  <div class="table-container">
-    <table id="recordTable">
-      <thead>
-        <tr>
-          <th>Student Name</th>
-          <th>Prelim</th>
-          <th>Midterm</th>
-          <th>Semi-Finals</th>
-          <th>Finals</th>
-          <th>Final Grade</th>
-          <th>Remarks</th>
-        </tr>
-      </thead>
-      <tbody id="tableBody"></tbody>
-    </table>
-  </div>
 
   <script src="Login-script.js"></script>
   <script>

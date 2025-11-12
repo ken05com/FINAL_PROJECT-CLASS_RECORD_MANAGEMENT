@@ -39,19 +39,34 @@
     <p>Enter the student's full name below:</p>
 
     <div class="class-name">
-      <p>Please Add a Student's full name</p>
-      <input id="studentNameInput" type="text" placeholder="Add Student Name" required />
-      <button class="btn btn-add" onclick="addStudent()">Add Student</button>
+      <div class="student-sections">
 
-      <div class="import-section">
-        <label class="import-label">Import Students (Excel):</label>
-        <input type="file" id="excelStudents" accept=".xlsx, .xls">
-        <button class="btn-import" onclick="importStudents()">Upload</button>
+        <div class="student-entry-block">
+          <div class="divider">
+            <p>Please add the student's full name</p>
+          </div>
+
+          <div class="student-entry">
+            <input id="studentNameInput" type="text" placeholder="Add Student Name" required />
+            <button class="btn btn-add" onclick="addStudent()">Add Student</button>
+          </div>
+        </div>
+
+        <div class="import-block">
+          <div class="divider">
+            <p>Import Students (Excel):</p>
+          </div>
+
+          <div class="import-section">
+            <input type="file" id="excelStudents" accept=".xlsx, .xls" />
+            <button class="btn-import" onclick="importStudents()">Upload</button>
+          </div>
+        </div>
+
       </div>
 
-
     </div>
-    
+
     <div class="table-container">
       <table id="recordTable">
         <thead>
@@ -63,7 +78,8 @@
         <tbody id="tableBody"></tbody>
       </table>
     </div>
-    
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <script src="Login-script.js"></script>
     <script>
       const params = new URLSearchParams(window.location.search);

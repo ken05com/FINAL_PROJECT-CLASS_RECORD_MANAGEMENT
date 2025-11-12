@@ -335,26 +335,25 @@ document.addEventListener("DOMContentLoaded", () => {
 // -----------------------------
 // ADD STUDENTS PAGE (add-students.html)
 // -----------------------------
+// ...existing code...
 (function addStudentsModule() {
   if (!pathEndsWith("add-students.html") && !window.location.pathname.includes("add-students")) return;
 
   const classId = getClassIdFromURL();
   const currentClass = getClassById(classId);
-  if (!currentClass) {
-    // If class not found, redirect
-    alert("No class selected. Returning to class list.");
-    window.location.href = "class.html";
-    return;
-  }
+  if (!currentClass) { alert("No class selected."); window.location.href = "class.html"; return; }
 
-  // Render student table (global function used by inline onclick)
-  window.renderStudentTable = function renderStudentTable(classIdParam) {
-    const cid = classIdParam || classId;
+  // set subject header
+  const subjectEl = document.querySelector(".subjectname");
+  if (subjectEl) subjectEl.textContent = `${currentClass.name} - ${currentClass.semester || ""}`;
+
+  // render student table (exposed globally so other modules can call it)
+  window.renderStudentTable = function renderStudentTable(cid = classId) {
     const tableBody = document.getElementById("tableBody");
     if (!tableBody) return;
-    const students = loadStudentsFor(cid);
+    const students = loadStudentsFor(cid) || [];
     tableBody.innerHTML = "";
-    if (!students || students.length === 0) {
+    if (!students.length) {
       tableBody.innerHTML = `<tr><td colspan="2">No students added yet.</td></tr>`;
       return;
     }
@@ -363,7 +362,6 @@ document.addEventListener("DOMContentLoaded", () => {
       tr.innerHTML = `
         <td>${s.name}</td>
         <td>
-          <button class="btn-edit" onclick="editStudent(${i})"><img src="image/pencil (3).png" alt=""></button>
           <button class="btn-delete" onclick="deleteStudent(${i})"><img src="image/trash (1).png" alt=""></button>
         </td>
       `;
@@ -371,60 +369,119 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   };
 
-  // addStudent is global for inline onclick
+  // add single student (called by button in HTML)
   window.addStudent = function addStudent() {
     const input = document.getElementById("studentNameInput");
-    if (!input) return alert("Input element not found.");
-    const name = input.value.trim();
-    if (!name) return alert("Enter student name.");
-    const students = loadStudentsFor(classId);
-    // prevent duplicate name
-    if (students.some(s => (s.name || "").toLowerCase() === name.toLowerCase())) {
+    if (!input) return;
+    const name = (input.value || "").trim();
+    if (!name) return alert("Please enter student name.");
+    const students = loadStudentsFor(classId) || [];
+    // avoid duplicates by name (case-insensitive)
+    if (students.some(s => s.name.toLowerCase() === name.toLowerCase())) {
+      input.value = "";
       return alert("Student already exists.");
     }
-    const newStudent = {
-      id: Date.now(),
+    students.push({
+      id: Date.now() + Math.floor(Math.random() * 1000),
       name,
-      grades: { prelim: "", midterm: "", semifinals: "", finals: "", final: "", locked: false },
+      grades: { prelim: "", midterm: "", semifinals: "", finals: "", final: "", remarks: "" },
       scores: { quiz: "", project: "", exam: "", average: "" },
       attendance: []
-    };
-    students.push(newStudent);
+    });
     saveStudentsFor(classId, students);
     input.value = "";
-    renderStudentTable(classId);
+    renderStudentTable();
   };
 
-  window.editStudent = function editStudent(i) {
-    const students = loadStudentsFor(classId);
-    const s = students[i];
-    if (!s) return;
-    const newName = prompt("Edit student name:", s.name);
-    if (newName && newName.trim()) {
-      s.name = newName.trim();
-      saveStudentsFor(classId, students);
-      renderStudentTable(classId);
+  // delete student by index
+  window.deleteStudent = function deleteStudent(index) {
+    const students = loadStudentsFor(classId) || [];
+    if (index < 0 || index >= students.length) return;
+    if (!confirm(`Delete ${students[index].name}?`)) return;
+    students.splice(index, 1);
+    saveStudentsFor(classId, students);
+    renderStudentTable();
+  };
+
+  // import students from Excel (uses XLSX)
+  window.importStudents = function importStudents() {
+    const fileEl = document.getElementById("excelStudents");
+    if (!fileEl || !fileEl.files || !fileEl.files[0]) return alert("Select an Excel file.");
+    const file = fileEl.files[0];
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      try {
+        const workbook = XLSX.read(e.target.result, { type: "binary" });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+        if (!rows || rows.length === 0) return alert("Excel file is empty or has no usable rows.");
+        const students = loadStudentsFor(classId) || [];
+        rows.forEach(row => {
+          const name = row.Name || row.name || row["Student Name"] || row["Full Name"] || "";
+          const trimmed = String(name).trim();
+          if (!trimmed) return;
+          if (students.some(s => s.name.toLowerCase() === trimmed.toLowerCase())) return;
+          students.push({
+            id: Date.now() + Math.floor(Math.random() * 1000),
+            name: trimmed,
+            grades: { prelim: "", midterm: "", semifinals: "", finals: "", final: "", remarks: "" },
+            scores: { quiz: "", project: "", exam: "", average: "" },
+            attendance: []
+          });
+        });
+        saveStudentsFor(classId, students);
+        renderStudentTable();
+        alert("Students imported.");
+      } catch (err) {
+        console.error(err);
+        alert("Failed to import Excel file. See console.");
+      }
+    };
+
+    if (FileReader.prototype.readAsBinaryString) {
+      reader.readAsBinaryString(file);
+    } else {
+      reader.readAsArrayBuffer(file);
+      reader.onload = function (ev) {
+        const data = new Uint8Array(ev.target.result);
+        let arr = "";
+        for (let i = 0; i < data.length; ++i) arr += String.fromCharCode(data[i]);
+        try {
+          const workbook = XLSX.read(arr, { type: "binary" });
+          const sheet = workbook.Sheets[workbook.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+          // reuse logic above
+          const students = loadStudentsFor(classId) || [];
+          rows.forEach(row => {
+            const name = row.Name || row.name || row["Student Name"] || row["Full Name"] || "";
+            const trimmed = String(name).trim();
+            if (!trimmed) return;
+            if (students.some(s => s.name.toLowerCase() === trimmed.toLowerCase())) return;
+            students.push({
+              id: Date.now() + Math.floor(Math.random() * 1000),
+              name: trimmed,
+              grades: { prelim: "", midterm: "", semifinals: "", finals: "", final: "", remarks: "" },
+              scores: { quiz: "", project: "", exam: "", average: "" },
+              attendance: []
+            });
+          });
+          saveStudentsFor(classId, students);
+          renderStudentTable();
+          alert("Students imported.");
+        } catch (err) {
+          console.error(err);
+          alert("Failed to read Excel file.");
+        }
+      };
     }
   };
 
-  window.deleteStudent = function deleteStudent(i) {
-    const students = loadStudentsFor(classId);
-    if (!students[i]) return;
-    if (!confirm("Delete this student?")) return;
-    students.splice(i, 1);
-    saveStudentsFor(classId, students);
-    renderStudentTable(classId);
-  };
-
-  // back button link
-  const backBtn = document.getElementById("backBtn");
-  if (backBtn) {
-    backBtn.onclick = () => window.location.href = `class-details.html?classId=${classId}`;
-  }
-
-  // initial render
-  document.addEventListener("DOMContentLoaded", () => renderStudentTable(classId));
+  // initial render when DOM is ready
+  document.addEventListener("DOMContentLoaded", () => {
+    renderStudentTable();
+  });
 })();
+ // ...existing code...s  
 
 // -----------------------------
 // ADD SCORES PAGE (add-scores.html)
@@ -479,6 +536,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("DOMContentLoaded", render);
 })();
 
+// ...existing code...
 // -----------------------------
 // ADD GRADES PAGE (add-grades.html)
 // -----------------------------
@@ -489,15 +547,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const currentClass = getClassById(classId);
   if (!currentClass) { alert("No class selected."); window.location.href = "class.html"; return; }
 
-  const tableBody = document.getElementById("tableBody");
+  // set subject header
+  const subjectEl = document.querySelector(".subjectname");
+  if (subjectEl) subjectEl.textContent = `${currentClass.name} - ${currentClass.semester || ""}`;
 
   function computeFinalFromGrades(g) {
-    // Accept numeric strings or numbers; only use fields that are valid numbers
     const p = parseFloat(g.prelim) || 0;
     const m = parseFloat(g.midterm) || 0;
     const s = parseFloat(g.semifinals) || 0;
     const f = parseFloat(g.finals) || 0;
-    // Use the four values' average; if all zero => empty
     const values = [p, m, s, f].filter(v => v > 0);
     if (values.length === 0) return { final: "", remarks: "" };
     const avg = (p + m + s + f) / 4;
@@ -507,13 +565,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function isValidGradeFormat(val) {
-    // Must be like 1.00 to 5.00 (allow leading 1-5 and exactly two decimals)
     return /^[1-5](\.[0-9]{2})$/.test(String(val));
   }
 
+  // ...existing code...
   function render() {
+    const tableBody = document.getElementById("tableBody");
     if (!tableBody) return;
-    const students = loadStudentsFor(classId);
+    const students = loadStudentsFor(classId) || [];
     tableBody.innerHTML = "";
     if (!students.length) { tableBody.innerHTML = `<tr><td colspan="7">No students added yet.</td></tr>`; return; }
 
@@ -523,6 +582,8 @@ document.addEventListener("DOMContentLoaded", () => {
       s.grades.final = final;
       s.grades.remarks = remarks;
 
+      const statusClass = remarks === "Passed" ? "passed" : (remarks === "Failed" ? "failed" : "");
+
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${s.name}</td>
@@ -531,27 +592,25 @@ document.addEventListener("DOMContentLoaded", () => {
         <td><input type="text" maxlength="4" placeholder="1.00" value="${s.grades.semifinals || ""}" data-field="semifinals" data-index="${i}"></td>
         <td><input type="text" maxlength="4" placeholder="1.00" value="${s.grades.finals || ""}" data-field="finals" data-index="${i}"></td>
         <td class="final-grade-cell">${s.grades.final || ""}</td>
-        <td class="remark-cell">${s.grades.remarks || ""}</td>
+        <td class="remark-cell ${statusClass}">${s.grades.remarks || ""}</td>
       `;
       tableBody.appendChild(tr);
     });
 
-    // persist any computed finals
     saveStudentsFor(classId, students);
   }
+// ...existing code...
 
-  // live input handling (validate and auto-save)
-  tableBody?.addEventListener("input", (e) => {
+  // global input listener (works even if DOM changes)
+  document.addEventListener("input", (e) => {
     const input = e.target;
     if (!input || input.tagName !== "INPUT" || !input.dataset.field) return;
     const idx = Number(input.dataset.index);
     const field = input.dataset.field;
-    const raw = input.value.trim();
+    const raw = (input.value || "").trim();
 
-    // enforce format 1.00 - 5.00
     if (raw === "") {
       input.style.border = "";
-      // clear the saved field
     } else if (!isValidGradeFormat(raw)) {
       input.style.border = "1px solid red";
       return;
@@ -564,7 +623,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!student) return;
 
     student.grades = student.grades || {};
-    // store as string with two decimals if valid, else empty
     student.grades[field] = raw === "" ? "" : parseFloat(raw).toFixed(2);
 
     const { final, remarks } = computeFinalFromGrades(student.grades);
@@ -572,17 +630,17 @@ document.addEventListener("DOMContentLoaded", () => {
     student.grades.remarks = remarks;
 
     saveStudentsFor(classId, students);
-    // re-render to update final/remarks cells
     render();
   });
 
-  // initial render
   document.addEventListener("DOMContentLoaded", render);
 })();
+ // ...existing code...
 
 // -----------------------------
 // ADD ATTENDANCE PAGE (add-attendance.html)
 // -----------------------------
+// ...existing code...
 (function addAttendanceModule() {
   // 🧱 Prevent running twice
   if (window.__attendanceLoaded) return;
@@ -602,10 +660,14 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  const tableBody = document.getElementById("tableBody");
+  // set subject header
+  const subjectEl = document.querySelector(".subjectname");
+  if (subjectEl) subjectEl.textContent = `${currentClass.name} - ${currentClass.semester || ""}`;
 
   function render() {
-    const students = loadStudentsFor(classId);
+    const tableBody = document.getElementById("tableBody");
+    if (!tableBody) return;
+    const students = loadStudentsFor(classId) || [];
     tableBody.innerHTML = "";
 
     if (!students.length) {
@@ -636,25 +698,27 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ✅ Ensure only one listener is ever attached
-  tableBody?.addEventListener("change", (e) => {
+  // Use delegated change listener so it works even if tbody is recreated
+  document.addEventListener("change", (e) => {
     const el = e.target;
-    if (!el.classList.contains("att-select")) return;
+    if (!el.classList || !el.classList.contains("att-select")) return;
 
     const idx = Number(el.dataset.index);
     const val = el.value;
     if (!val) return;
 
-    const students = loadStudentsFor(classId);
+    const students = loadStudentsFor(classId) || [];
     const student = students[idx];
     if (!student) return;
     if (!student.attendance) student.attendance = [];
 
-    // Optional: prevent duplicate marking for same date
+    // prevent duplicate marking for same date
     const today = new Date().toLocaleDateString();
     const alreadyMarked = student.attendance.some(a => a.date === today);
     if (alreadyMarked) {
       alert(`${student.name} is already marked for today.`);
+      // reset select to default
+      el.value = "";
       return;
     }
 
@@ -663,9 +727,10 @@ document.addEventListener("DOMContentLoaded", () => {
     render();
   });
 
-  render();
+  // initial render once DOM is ready
+  document.addEventListener("DOMContentLoaded", render);
 })();
-
+ // ...existing code...
 
 // -----------------------------
 // DASHBOARD MODULE (dashboard.html) — minimal & dynamic
@@ -828,107 +893,86 @@ document.addEventListener("DOMContentLoaded", () => {
 })();
 
 
-function addStudentsModule() {
-  window.importStudents = function () {
-    const file = document.getElementById("excelStudents").files[0];
-    if (!file) return alert("Please select an Excel file.");
+// ...existing code...
 
+// Replace the duplicate import IIFEs with one safe importer
+(function studentsImportHandler() {
+  const page = window.location.pathname.split('/').pop();
+  if (!page.includes("add-students")) return; // only on add-students page
+
+  const classId = getClassIdFromURL();
+  if (!classId) return;
+
+  window.importStudents = function () {
+    const fileEl = document.getElementById("excelStudents");
+    if (!fileEl || !fileEl.files || !fileEl.files[0]) return alert("Please select an Excel file.");
+
+    const file = fileEl.files[0];
     const reader = new FileReader();
 
     reader.onload = function (event) {
-      const workbook = XLSX.read(event.target.result, { type: "binary" });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(sheet);
+      try {
+        const workbook = XLSX.read(event.target.result, { type: "binary" });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+        if (!rows || rows.length === 0) return alert("Excel file is empty or incorrectly formatted.");
 
-      if (rows.length === 0) {
-        alert("Excel file is empty or incorrectly formatted.");
-        return;
-      }
+        const students = loadStudentsFor(classId);
 
-      const students = loadStudentsFor(classId);
+        rows.forEach(row => {
+          const name = row.Name || row.name || row["Student Name"] || "";
+          if (!name) return;
+          if (students.some(s => s.name.toLowerCase() === String(name).toLowerCase())) return;
 
-      rows.forEach(row => {
-        if (!row.Name) return;
-
-        // Prevent duplicates
-        if (students.some(s => s.name.toLowerCase() === row.Name.toLowerCase())) return;
-
-        students.push({
-          id: Date.now() + Math.random(),
-          name: row.Name.trim(),
-          grades: {
-            prelim: row.Prelim || "",
-            midterm: row.Midterm || "",
-            semifinals: row.Semifinals || "",
-            finals: row.Finals || "",
-            final: "",
-            locked: false
-          },
-          scores: { quiz: "", project: "", exam: "", average: "" },
-          attendance: []
+          students.push({
+            id: Date.now() + Math.random(),
+            name: String(name).trim(),
+            grades: {
+              prelim: row.Prelim || "",
+              midterm: row.Midterm || "",
+              semifinals: row.Semifinals || "",
+              finals: row.Finals || "",
+              final: "",
+              remarks: ""
+            },
+            scores: { quiz: "", project: "", exam: "", average: "" },
+            attendance: []
+          });
         });
-      });
 
-      saveStudentsFor(classId, students);
-      renderStudentTable(classId);
-      alert("Students imported successfully.");
+        saveStudentsFor(classId, students);
+        if (typeof renderStudentTable === "function") renderStudentTable(classId);
+        alert("Students imported successfully.");
+      } catch (err) {
+        console.error("Import failed:", err);
+        alert("Failed to import file. Open console for details.");
+      }
     };
 
-    reader.readAsBinaryString(file);
+    // modern browsers support readAsBinaryString; fallback to ArrayBuffer if needed
+    if (FileReader.prototype.readAsBinaryString) {
+      reader.readAsBinaryString(file);
+    } else {
+      reader.readAsArrayBuffer(file);
+      reader.onload = function (event) {
+        const data = new Uint8Array(event.target.result);
+        const arr = [];
+        for (let i = 0; i < data.length; ++i) arr.push(String.fromCharCode(data[i]));
+        const bstr = arr.join("");
+        try {
+          const workbook = XLSX.read(bstr, { type: "binary" });
+          const sheet = workbook.Sheets[workbook.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+          // reuse above logic by calling the onload handler again
+          reader.onload({ target: { result: bstr } });
+        } catch (err) {
+          console.error(err);
+          alert("Failed to read file.");
+        }
+      };
+    }
   };
-
-}
-
-function addStudentsModule() {
-  window.importStudents = function () {
-    const file = document.getElementById("excelStudents").files[0];
-    if (!file) return alert("Please select an Excel file.");
-
-    const reader = new FileReader();
-
-    reader.onload = function (event) {
-      const workbook = XLSX.read(event.target.result, { type: "binary" });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(sheet);
-
-      if (rows.length === 0) {
-        alert("Excel file is empty or incorrectly formatted.");
-        return;
-      }
-
-      const students = loadStudentsFor(classId);
-
-      rows.forEach(row => {
-        if (!row.Name) return;
-
-        // Prevent duplicate names
-        if (students.some(s => s.name.toLowerCase() === row.Name.toLowerCase())) return;
-
-        students.push({
-          id: Date.now() + Math.random(),
-          name: row.Name.trim(),
-          grades: {
-            prelim: row.Prelim || "",
-            midterm: row.Midterm || "",
-            semifinals: row.Semifinals || "",
-            finals: row.Finals || "",
-            final: "",
-            remarks: ""
-          },
-          scores: { quiz: "", project: "", exam: "", average: "" },
-          attendance: []
-        });
-      });
-
-      saveStudentsFor(classId, students);
-      renderStudentTable(classId);
-      alert("Students imported successfully.");
-    };
-
-    reader.readAsBinaryString(file);
-  };
-
-}
+})();
 
 
 // -----------------------------
