@@ -760,3 +760,16 @@ th {
   width: 80%;
 }
 
+/* Attendance count colors */
+.present-count {
+  color: #2ecc71; /* green for present */
+  font-weight: 700;
+}
+.absent-count {
+  color: #e74c3c; /* red for absent */
+  font-weight: 700;
+}
+
+/* Light-mode overrides */
+body.light-mode .present-count { color: #0b8b64; }
+body.light-mode .absent-count { color: #b02b22; }

@@ -622,7 +622,7 @@ document.addEventListener("DOMContentLoaded", () => {
 })();
 
 
- // ADD ATTENDANCE PAGE (add-attendance.html)
+// ADD ATTENDANCE PAGE (add-attendance.html)
 (function addAttendanceModule() {
   // 🧱 Prevent running twice
   if (window.__attendanceLoaded) return;
@@ -646,12 +646,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const subjectEl = document.querySelector(".subjectname");
   if (subjectEl) subjectEl.textContent = `${currentClass.name} - ${currentClass.semester || ""}`;
 
+  // inside addAttendanceModule -> replace the render() function with:
   function render() {
     const tableBody = document.getElementById("tableBody");
     if (!tableBody) return;
     const students = loadStudentsFor(classId) || [];
     tableBody.innerHTML = "";
-
     if (!students.length) {
       tableBody.innerHTML = `<tr><td colspan="4">No students added yet.</td></tr>`;
       return;
@@ -665,17 +665,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td>${s.name}</td>
-        <td>${present}</td>
-        <td>${absent}</td>
-        <td>
-          <select class="att-select" data-index="${i}">
-            <option value="">Mark</option>
-            <option value="Present">Present</option>
-            <option value="Absent">Absent</option>
-          </select>
-        </td>
-      `;
+            <td>${s.name}</td>
+            <td class="present-count">${present}</td>
+            <td class="absent-count">${absent}</td>
+            <td>
+              <select class="att-select" data-index="${i}">
+                <option value="">Mark</option>
+                <option value="Present">Present</option>
+                <option value="Absent">Absent</option>
+              </select>
+            </td>
+          `;
       tableBody.appendChild(tr);
     });
   }
