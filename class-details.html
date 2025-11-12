@@ -72,7 +72,7 @@
   </main>
 
   <script>
-    // ✅ Get classId from URL
+    // Get classId from URL
     const urlParams = new URLSearchParams(window.location.search);
     const classId = urlParams.get("classId");
 
@@ -81,7 +81,7 @@
       window.location.href = "class.html";
     }
 
-    // ✅ Automatically add classId to all 3 card buttons
+    // Automatically add classId to all 3 card buttons
     document.getElementById("addStudentsBtn").onclick = () =>
       window.location.href = `add-students.html?classId=${classId}`;
     document.getElementById("addGradesBtn").onclick = () =>

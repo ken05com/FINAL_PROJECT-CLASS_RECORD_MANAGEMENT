@@ -1,4 +1,3 @@
-
 function currentUser() {
   return localStorage.getItem("loggedInUser") || null;
 }
@@ -231,83 +230,61 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
-// CLASS PAGE (class.html) — create / list / delete
-(function classPageModule() {
-  if (!pathEndsWith("class.html")) return;
-
-  let classesList = readClasses();
-  const container = document.getElementById("availableclass");
-
-  function renderClasses() {
-    if (!container) return;
-    container.innerHTML = "";
-    if (!classesList || classesList.length === 0) {
-      container.innerHTML = `<p class="no-class">No classes created yet.</p>`;
-      return;
-    }
-    classesList.forEach((c, i) => {
-      const btn = document.createElement("button");
-      btn.className = "classes";
-      btn.onclick = () => (window.location.href = `class-details.html?classId=${c.id}`);
-      btn.innerHTML = `
-        <div class="text">
-          <h1>${c.name}</h1>
-          <p>${c.semester || c.section || ""}</p>
-        </div>
-        <button class="delete-btn" onclick="event.stopPropagation(); removeClass(${i})">
-          <img src="image/trash.png" alt="Remove Class" class="delete-icon">
-        </button>
-      `;
-      container.appendChild(btn);
-    });
-  }
-
-  // ...existing code...
-  window.addClass = function () {
+window.addClass = function () {
     const nameInput = document.getElementById("addedClass");
     const semesterSelect = document.getElementById("semester-select");
+    const timeInput = document.getElementById("classTime");
+
     const className = nameInput?.value.trim();
     const semester = semesterSelect?.value;
+    const rawTime = timeInput && timeInput.value ? timeInput.value : "";
+
     if (!className) return alert("Please enter a class name.");
     if (!semester) return alert("Please select a semester.");
+    if (!rawTime) return alert("Please select a class time.");
 
-    // update the module-scoped classesList (do NOT redeclare with let)
+    // Load latest classes list
     classesList = readClasses() || [];
 
-    // check duplicate by name + semester (case-insensitive)
+    // Duplicate check
     const exists = classesList.some(c =>
-      String(c.name).trim().toLowerCase() === className.toLowerCase() &&
-      String(c.semester || "").trim().toLowerCase() === String(semester).trim().toLowerCase()
+        c.name.trim().toLowerCase() === className.toLowerCase() &&
+        (c.semester || "").trim().toLowerCase() === semester.trim().toLowerCase()
     );
-    if (exists) {
-      return alert("A class with the same name and semester already exists.");
+    if (exists) return alert("A class with the same name and semester already exists.");
+
+    // Convert 24h to 12h AM/PM
+    function convertTo12Hour(timeStr) {
+        const [hour, minute] = timeStr.split(":");
+        let h = parseInt(hour, 10);
+        const ampm = h >= 12 ? "PM" : "AM";
+        h = h % 12 || 12;
+        return `${h}:${minute} ${ampm}`;
     }
 
-    const newClass = { id: Date.now(), name: className, semester };
+    const classTime = convertTo12Hour(rawTime);
+
+    // Create class object
+    const newClass = {
+        id: Date.now(),
+        name: className,
+        semester: semester,
+        time: classTime
+    };
+
+    // Save
     classesList.push(newClass);
     writeClasses(classesList);
-    saveStudentsFor(newClass.id, []); // initialize per-user students store
+    saveStudentsFor(newClass.id, []);
+
+    // Reset
     nameInput.value = "";
     semesterSelect.value = "";
-    // re-render using the updated (module-scoped) list
-    if (typeof renderClasses === "function") renderClasses();
-  };
-  // ...existing code...
-  window.removeClass = function (index) {
-    if (!confirm("Remove this class and all its student data?")) return;
-    const c = classesList[index];
-    if (c && c.id) {
-      const user = currentUser() || "guest";
-      localStorage.removeItem(`studentsList_${user}_${c.id}`);
-    }
-    classesList.splice(index, 1);
-    writeClasses(classesList);
-    renderClasses();
-  };
+    timeInput.value = "";
 
-  // initial render
-  renderClasses();
-})();
+    // Re-render
+    renderClasses();
+};
 
 
 // CLASS DETAILS PAGE (class-details.html)
@@ -336,6 +313,83 @@ document.addEventListener("DOMContentLoaded", () => {
     if (btn) btn.onclick = () => (window.location.href = `${page}?classId=${classId}`);
   });
 })();
+
+
+(function classListRenderer() {
+  // Only run on the class listing page
+  if (!pathEndsWith('class.html')) return;
+
+  // ensure a shared classesList is available (addClass writes to this variable)
+  window.classesList = window.classesList || readClasses() || [];
+  const container = document.getElementById('availableclass');
+
+  // small HTML-escape helper
+  function escapeHtml(str) {
+    if (str === null || typeof str === 'undefined') return '';
+    return String(str).replace(/[&<>"']/g, function (s) {
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[s];
+    });
+  }
+
+  // render the classes into the container
+  window.renderClasses = function renderClasses() {
+    if (!container) return;
+    window.classesList = readClasses() || [];
+    container.innerHTML = '';
+    if (!window.classesList.length) {
+      container.innerHTML = '<div class="no-class">No classes created yet.</div>';
+      return;
+    }
+
+    window.classesList.forEach((c, i) => {
+      const div = document.createElement('div');
+      div.className = 'classes';
+      div.innerHTML = `
+        <div class="class-name"><strong>${escapeHtml(c.name)}</strong></div>
+        <div style="margin-top:6px"><small>Time: ${escapeHtml(c.time || '-')}</small></div>
+        <div style="margin-top:4px"><small>Semester: ${escapeHtml(c.semester || '')}</small></div>
+        <button class="delete-btn" data-index="${i}">×</button>
+      `;
+
+      // open details when card is clicked (but not when delete button clicked)
+      div.addEventListener('click', (e) => {
+        if (e.target && e.target.classList && e.target.classList.contains('delete-btn')) return;
+        window.location.href = `class-details.html?classId=${c.id}`;
+      });
+
+      const del = div.querySelector('.delete-btn');
+      if (del) {
+        del.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          const idx = Number(ev.currentTarget.dataset.index);
+          window.removeClass(idx);
+        });
+      }
+
+      container.appendChild(div);
+    });
+  };
+
+  // remove class by index
+  window.removeClass = function (index) {
+    if (!confirm('Remove this class and all its student data?')) return;
+    const list = readClasses() || [];
+    const c = list[index];
+    if (c && c.id) {
+      try {
+        const user = currentUser() || 'guest';
+        localStorage.removeItem(`studentsList_${user}_${c.id}`);
+      } catch (e) { /* ignore */ }
+    }
+    list.splice(index, 1);
+    writeClasses(list);
+    window.classesList = list;
+    window.renderClasses();
+  };
+
+  document.addEventListener('DOMContentLoaded', window.renderClasses);
+})();
+
 
 
 
@@ -898,4 +952,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 })();
+
+
+
 

@@ -399,10 +399,9 @@ select:focus {
   margin-top: 10px;
   justify-content: center;
   align-items: center;
-  padding: 10px;
-  padding-left: 40px;
   padding-bottom: 10px;
   border-radius: 10px;
+  font-size: 2rem;
 }
 
 .btn-add {
@@ -773,3 +772,13 @@ th {
 /* Light-mode overrides */
 body.light-mode .present-count { color: #0b8b64; }
 body.light-mode .absent-count { color: #b02b22; }
+
+
+.class-form input[type="time"] {
+  width: 320px;
+  background-color: #1B1B1B;
+  border: 1px solid #00b894;
+  color: white;
+  padding: 10px;
+  border-radius: 8px;
+}
