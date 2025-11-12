@@ -262,6 +262,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // ...existing code...
   window.addClass = function () {
     const nameInput = document.getElementById("addedClass");
     const semesterSelect = document.getElementById("semester-select");
@@ -269,15 +270,29 @@ document.addEventListener("DOMContentLoaded", () => {
     const semester = semesterSelect?.value;
     if (!className) return alert("Please enter a class name.");
     if (!semester) return alert("Please select a semester.");
+
+    // update the module-scoped classesList (do NOT redeclare with let)
+    classesList = readClasses() || [];
+
+    // check duplicate by name + semester (case-insensitive)
+    const exists = classesList.some(c =>
+      String(c.name).trim().toLowerCase() === className.toLowerCase() &&
+      String(c.semester || "").trim().toLowerCase() === String(semester).trim().toLowerCase()
+    );
+    if (exists) {
+      return alert("A class with the same name and semester already exists.");
+    }
+
     const newClass = { id: Date.now(), name: className, semester };
     classesList.push(newClass);
     writeClasses(classesList);
     saveStudentsFor(newClass.id, []); // initialize per-user students store
     nameInput.value = "";
     semesterSelect.value = "";
-    renderClasses();
+    // re-render using the updated (module-scoped) list
+    if (typeof renderClasses === "function") renderClasses();
   };
-
+  // ...existing code...
   window.removeClass = function (index) {
     if (!confirm("Remove this class and all its student data?")) return;
     const c = classesList[index];
@@ -393,77 +408,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // import students from Excel (uses XLSX)
-  window.importStudents = function importStudents() {
-    const fileEl = document.getElementById("excelStudents");
-    if (!fileEl || !fileEl.files || !fileEl.files[0]) return alert("Select an Excel file.");
-    const file = fileEl.files[0];
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      try {
-        const workbook = XLSX.read(e.target.result, { type: "binary" });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-        if (!rows || rows.length === 0) return alert("Excel file is empty or has no usable rows.");
-        const students = loadStudentsFor(classId) || [];
-        rows.forEach(row => {
-          const name = row.Name || row.name || row["Student Name"] || row["Full Name"] || "";
-          const trimmed = String(name).trim();
-          if (!trimmed) return;
-          if (students.some(s => s.name.toLowerCase() === trimmed.toLowerCase())) return;
-          students.push({
-            id: Date.now() + Math.floor(Math.random() * 1000),
-            name: trimmed,
-            grades: { prelim: "", midterm: "", semifinals: "", finals: "", final: "", remarks: "" },
-            scores: { quiz: "", project: "", exam: "", average: "" },
-            attendance: []
-          });
-        });
-        saveStudentsFor(classId, students);
-        renderStudentTable();
-        alert("Students imported.");
-      } catch (err) {
-        console.error(err);
-        alert("Failed to import Excel file. See console.");
-      }
-    };
 
-    if (FileReader.prototype.readAsBinaryString) {
-      reader.readAsBinaryString(file);
-    } else {
-      reader.readAsArrayBuffer(file);
-      reader.onload = function (ev) {
-        const data = new Uint8Array(ev.target.result);
-        let arr = "";
-        for (let i = 0; i < data.length; ++i) arr += String.fromCharCode(data[i]);
-        try {
-          const workbook = XLSX.read(arr, { type: "binary" });
-          const sheet = workbook.Sheets[workbook.SheetNames[0]];
-          const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-          // reuse logic above
-          const students = loadStudentsFor(classId) || [];
-          rows.forEach(row => {
-            const name = row.Name || row.name || row["Student Name"] || row["Full Name"] || "";
-            const trimmed = String(name).trim();
-            if (!trimmed) return;
-            if (students.some(s => s.name.toLowerCase() === trimmed.toLowerCase())) return;
-            students.push({
-              id: Date.now() + Math.floor(Math.random() * 1000),
-              name: trimmed,
-              grades: { prelim: "", midterm: "", semifinals: "", finals: "", final: "", remarks: "" },
-              scores: { quiz: "", project: "", exam: "", average: "" },
-              attendance: []
-            });
-          });
-          saveStudentsFor(classId, students);
-          renderStudentTable();
-          alert("Students imported.");
-        } catch (err) {
-          console.error(err);
-          alert("Failed to read Excel file.");
-        }
-      };
-    }
-  };
 
   // initial render when DOM is ready
   document.addEventListener("DOMContentLoaded", () => {
